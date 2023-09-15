@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "PharmaPoint",
+    "slug": "PharmaPoint",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#CE2C4F"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#CE2C4F"
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.eeddue.PharmaPoint"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow PharmaPoint to use your location."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow PharmaPoint to accesses your files"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4c862c5c-f3ac-44e9-8183-2bfca6be0925"
+      }
+    }
+  }
+}
