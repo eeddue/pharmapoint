@@ -1,16 +1,14 @@
 import {
+  ActivityIndicator,
   Image,
-  Modal,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useCallback, useEffect, useState } from "react";
-import { COLORS, FONTS, SHADOW } from "../../constants";
+import { useCallback, useEffect, useState } from "react";
 import * as Icons from "@expo/vector-icons";
 import {
   Bubble,
@@ -18,60 +16,137 @@ import {
   MessageText,
   Send,
 } from "react-native-gifted-chat";
+import axios from "axios";
 
-const Chat = ({ route, navigation }) => {
-  const { chat } = route.params;
+import { COLORS, FONTS, SHADOW } from "../../constants";
+import { useAppContext } from "../../context/AppContext";
+import { useNavigation } from "@react-navigation/native";
+import socket from "../../context/socket";
+import ActionsModal from "../../components/ActionsModal";
+import { AvatarIcon } from "../../constants/icons";
+import { showToast } from "../../helpers";
+
+const Chat = ({ route }) => {
+  const { receiver } = route.params;
+  const { user, onlineUsers, handleChats, onChatDeleted } = useAppContext();
+  const navigation = useNavigation();
 
   const [messages, setMessages] = useState([]);
   const [visible, setVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const headers = { Authorization: `Bearer ${user.token}` };
+
+  const handleMessages = (msgs) =>
+    msgs
+      .map((msg) => {
+        return {
+          _id: msg._id,
+          text: msg.message,
+          createdAt: msg.createdAt,
+          user: {
+            _id: msg.sender,
+          },
+        };
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   useEffect(() => {
-    setMessages([
-      {
-        _id: 1,
-        text: "Hello developer",
-        createdAt: new Date(),
+    (async () => {
+      await axios
+        .get(`/chats/${receiver._id}`, { headers })
+        .then(({ data }) => setMessages(handleMessages(data.messages)))
+        .catch((error) => console.log(error))
+        .finally(() => setLoading(false));
+    })();
+  }, []);
+
+  useEffect(() => {
+    socket.on("receive_message", (msg) => {
+      const newMessage = {
+        _id: msg._id,
+        text: msg.message,
+        createdAt: msg.createdAt,
         user: {
-          _id: 2,
-          name: "React Native",
-          avatar: chat.image,
+          _id: msg.sender,
         },
-      },
-    ]);
+      };
+      handleChats({ receiver: receiver._id, message: msg });
+      setMessages((previousMessages) =>
+        GiftedChat.append(previousMessages, newMessage)
+      );
+    });
+
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [socket]);
+
+  const onSend = useCallback(async (messages = []) => {
+    await axios
+      .post(
+        "/chats",
+        { receiver: receiver._id, message: messages[0].text },
+        { headers }
+      )
+      .then(({ data }) => {
+        socket.emit("send_message", data.message);
+        handleChats({ receiver: receiver._id, message: data.message });
+
+        setMessages((previousMessages) =>
+          GiftedChat.append(previousMessages, messages)
+        );
+      })
+      .catch((error) => alert(error.response.data.msg));
   }, []);
 
-  const onSend = useCallback((messages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
-  }, []);
-
-  const handleDelete = () => {
-    setVisible((prev) => !prev);
+  const handleDelete = async () => {
+    setDeleting(true);
+    await axios
+      .delete(`/chats/${receiver._id}`, { headers })
+      .then(() => {
+        onChatDeleted(receiver._id);
+        setVisible((prev) => !prev);
+        navigation.goBack();
+      })
+      .catch((error) => showToast("error", "Sorry", error.response.data.msg))
+      .finally(() => setDeleting(false));
   };
 
   const renderHeader = () => {
+    const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
     return (
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable disabled={deleting} onPress={() => navigation.goBack()}>
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
         <View style={styles.imageView}>
-          <Image source={{ uri: chat.image }} style={styles.image} />
+          <Image source={AvatarIcon} style={styles.image} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>
-            {chat.name}
+            {receiver.name}
           </Text>
-          <Text style={styles.status}>Online</Text>
+          <Text
+            style={[
+              styles.status,
+              { color: isOnline ? COLORS.green : COLORS.red },
+            ]}
+          >
+            {isOnline ? "Online" : "Offline"}
+          </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => setVisible((prev) => !prev)}
-          style={styles.delete}
-          activeOpacity={0.5}
-        >
-          <Icons.SimpleLineIcons name="trash" size={20} />
-        </TouchableOpacity>
+        {messages.length ? (
+          <TouchableOpacity
+            disabled={deleting}
+            onPress={() => setVisible((prev) => !prev)}
+            style={styles.delete}
+            activeOpacity={0.5}
+          >
+            <Icons.SimpleLineIcons name="trash" size={20} />
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   };
@@ -79,7 +154,7 @@ const Chat = ({ route, navigation }) => {
   const renderInputToolbar = (props) => {
     return (
       <View style={styles.footer}>
-        <TouchableOpacity>
+        <TouchableOpacity disabled={deleting}>
           <Icons.Feather name="plus" size={30} color={COLORS.red} />
         </TouchableOpacity>
         <TextInput
@@ -87,6 +162,7 @@ const Chat = ({ route, navigation }) => {
           placeholder="Type a message..."
           value={props.text}
           onChangeText={props.onTextChanged}
+          editable={!deleting}
         />
 
         <Send {...props} disabled={!props.text.trim().length}>
@@ -118,68 +194,45 @@ const Chat = ({ route, navigation }) => {
     );
   };
 
-  const renderModal = () => {
-    return (
-      <Modal transparent visible={visible} animationType="slide">
-        <Pressable
-          style={{ flex: 1 }}
-          onPress={() => setVisible((prev) => !prev)}
-        />
-        <SafeAreaView style={[styles.modal, { padding: 10 }]}>
-          <View style={{ padding: 10 }}>
-            <View>
-              <Text style={styles.bigText}>Delete your chat</Text>
-              <Text style={styles.smallText}>
-                Are you sure you want to delete your conversation history with{" "}
-                <Text style={{ color: COLORS.red }}>{chat.name}</Text>?
-              </Text>
-            </View>
-            <View style={styles.actions}>
-              <TouchableOpacity
-                activeOpacity={0.5}
-                onPress={() => setVisible((prev) => !prev)}
-                style={[styles.action, { backgroundColor: COLORS.gray }]}
-              >
-                <Text style={styles.actionText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.5}
-                onPress={handleDelete}
-                style={[styles.action, { backgroundColor: COLORS.red }]}
-              >
-                <Text style={[styles.actionText, { color: COLORS.white }]}>
-                  Confirm
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
-    );
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
       {renderHeader()}
 
-      <GiftedChat
-        messages={messages}
-        onSend={(messages) => onSend(messages)}
-        user={{
-          _id: 1,
-          avatar:
-            "https://icon-library.com/images/icon-avatar/icon-avatar-19.jpg",
-        }}
-        textInputStyle={styles.input}
-        renderInputToolbar={renderInputToolbar}
-        renderChatEmpty={renderChatEmpty}
-        renderChatFooter={() => <View style={{ height: 25 }} />}
-        renderBubble={renderBubble}
-        renderMessageText={renderMessageText}
-        showUserAvatar-
-        alwaysShowSend
+      {loading ? (
+        <ActivityIndicator
+          size={25}
+          color={COLORS.red}
+          style={{ marginTop: 30 }}
+        />
+      ) : (
+        <GiftedChat
+          messages={messages}
+          onSend={(messages) => onSend(messages)}
+          user={{ _id: user._id }}
+          textInputStyle={styles.input}
+          renderInputToolbar={renderInputToolbar}
+          renderChatEmpty={renderChatEmpty}
+          renderChatFooter={() => <View style={{ height: 25 }} />}
+          renderBubble={renderBubble}
+          renderMessageText={renderMessageText}
+          showUserAvatar={false}
+          renderAvatar={null}
+          alwaysShowSend
+          messagesContainerStyle={
+            !messages.length && {
+              transform: [{ scaleY: -1 }],
+            }
+          }
+        />
+      )}
+      <ActionsModal
+        visible={visible}
+        setVisible={setVisible}
+        loading={deleting}
+        text={`Are you sure you want to delete your conversation history with ${receiver.name}`}
+        handleAction={handleDelete}
+        title="Delete chat"
       />
-      {renderModal()}
     </View>
   );
 };
@@ -208,11 +261,10 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: COLORS.gray,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
+  image: { width: 30, height: 30, tintColor: COLORS.ltblack },
   name: {
     ...FONTS.SemiBold,
     fontSize: 16,
@@ -220,7 +272,6 @@ const styles = StyleSheet.create({
   status: {
     ...FONTS.Regular,
     fontSize: 12,
-    color: COLORS.red,
   },
   footer: {
     borderTopColor: COLORS.gray,

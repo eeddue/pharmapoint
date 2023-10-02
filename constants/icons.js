@@ -11,9 +11,8 @@ import UserFillIcon from "../assets/icons/user-fill.png";
 import AvatarIcon from "../assets/icons/avatar.png";
 import SearchIcon from "../assets/icons/search.png";
 import PharmacyIcon from "../assets/icons/pharmacy.png";
-import CartMinusIcon from "../assets/icons/cart-minus.png";
-import CartPlusIcon from "../assets/icons/cart-plus.png";
 import LocationIcon from "../assets/icons/location.png";
+import NoLocationIcon from "../assets/icons/no-location.png";
 import RefillIcon from "../assets/icons/refill.png";
 import ChatBoxIcon from "../assets/icons/chat-box.png";
 import PharmacyNearIcon from "../assets/icons/pharmacy-near.png";
@@ -23,6 +22,8 @@ import ContactIcon from "../assets/icons/contact.png";
 import PrivacyIcon from "../assets/icons/privacy.png";
 import TermsIcon from "../assets/icons/terms.png";
 import HelpIcon from "../assets/icons/help.png";
+import PricingIcon from "../assets/icons/pricing.png";
+import MpesaIcon from "../assets/icons/mpesa.png";
 
 export {
   CartFillIcon,
@@ -38,9 +39,8 @@ export {
   AvatarIcon,
   SearchIcon,
   PharmacyIcon,
-  CartMinusIcon,
-  CartPlusIcon,
   LocationIcon,
+  NoLocationIcon,
   RefillIcon,
   ChatBoxIcon,
   PharmacyNearIcon,
@@ -50,4 +50,6 @@ export {
   PrivacyIcon,
   TermsIcon,
   HelpIcon,
+  PricingIcon,
+  MpesaIcon,
 };

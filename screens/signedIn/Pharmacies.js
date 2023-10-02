@@ -21,32 +21,36 @@ const Pharmacies = ({ navigation }) => {
   const [name, setName] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
-  // 'https://jsonplaceholder.typicode.com/todos/1'
-
   useEffect(() => {
     (async () => {
-      await axios
-        .get("/pharmacies")
-        .then(({ data }) => setPharmacies(data))
-        .catch((error) => console.log(error))
-        .finally(() => setLoading(false));
+      const response = await getPharmacies();
+      setPharmacies(response);
+      setLoading(false);
     })();
   }, []);
 
+  const getPharmacies = async () => {
+    try {
+      const { data } = await axios.get("/pharmacies");
+      return data.pharmacies;
+    } catch (error) {
+      console.log(error, "pharmacies");
+      return [];
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await axios
-      .get("/pharmacies")
-      .then(({ data }) => setPharmacies(data))
-      .catch((error) => console.log(error))
-      .finally(() => setRefreshing(false));
+    const response = await getPharmacies();
+    setPharmacies(response);
+    setRefreshing(false);
   };
 
   const searchProducts = async () => {
     setSearching(true);
     await axios
-      .get(`/products?name=${name.trim()}`)
-      .then(({ data }) => {})
+      .get(`/pharmacies?name=${name.trim()}`)
+      .then(({ data }) => setPharmacies(data.pharmacies))
       .catch((error) => console.log(error))
       .finally(() => setSearching(false));
   };
@@ -88,7 +92,7 @@ const Pharmacies = ({ navigation }) => {
       ) : (
         <FlatList
           data={pharmacies}
-          keyExtractor={(phar) => phar.id}
+          keyExtractor={(phar) => phar._id}
           renderItem={({ item, index }) => (
             <PharmacyItem index={index} pharmacy={item} />
           )}

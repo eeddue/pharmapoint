@@ -5,6 +5,7 @@ export const COLORS = {
   white: "#ffffff",
   black: "#111",
   ltblack: "#7E7F7E",
+  green: "#36d982",
 };
 
 export const FONTS = {

@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
+import moment from "moment";
 
 export const getGreeting = () => {
   const hour = new Date().getHours();
@@ -66,7 +68,7 @@ export const getCurrentLocation = async () => {
   let { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== "granted") {
     Alert.alert("Permission to access location was denied");
-    return;
+    return null;
   }
 
   let { coords } = await Location.getCurrentPositionAsync({
@@ -89,4 +91,39 @@ export const pickImage = async () => {
   } else {
     return null;
   }
+};
+
+function toRadians(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+export const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const earthRadius = 6371; // Earth's radius in kilometers
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  const distance = earthRadius * c; // Distance in kilometers (or miles)
+
+  return distance.toFixed(1);
+};
+
+export const showToast = (type, text1, text2) => {
+  return Toast.show({ type, text1, text2 });
+};
+
+export const getWorkingHours = (openingTime, closingTime) => {
+  return (
+    moment(openingTime).format("h:mm A") +
+    " - " +
+    moment(closingTime).format("h:mm A")
+  );
 };

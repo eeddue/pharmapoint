@@ -6,25 +6,28 @@ import {
   View,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { COLORS, FONTS } from "../../constants";
-import Product from "../../components/Product";
 import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
+import { COLORS, FONTS } from "../../constants";
+import ProductItem from "../../components/ProductItem";
 
 const PharmacyProducts = ({ route }) => {
   const { pharmacy } = route.params;
+  const navigation = useNavigation();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    (async () => {
+    const unsub = navigation.addListener("focus", async () => {
       await axios
-        .get(`/products?owner=${pharmacy.id}`)
-        .then(({ data }) => setProducts(data))
+        .get(`/products/${pharmacy._id}`)
+        .then(({ data }) => setProducts(data.products))
         .catch((error) => console.log(error))
         .finally(() => setLoading(false));
-    })();
+    });
+
+    return () => unsub;
   }, []);
 
   return (
@@ -37,13 +40,14 @@ const PharmacyProducts = ({ route }) => {
         />
       ) : (
         <FlatList
+          bounces={false}
           data={products}
           ListEmptyComponent={() => (
-            <Text style={styles.empty}>Your have no chats.</Text>
+            <Text style={styles.empty}>No products found.</Text>
           )}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => (
-            <Product index={index} product={item} />
+            <ProductItem index={index} product={item} />
           )}
           contentContainerStyle={{
             backgroundColor: COLORS.white,

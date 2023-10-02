@@ -1,5 +1,4 @@
 import {
-  Image,
   Pressable,
   StyleSheet,
   Text,
@@ -7,7 +6,8 @@ import {
   View,
 } from "react-native";
 import React from "react";
-import { COLORS, FONTS } from "../constants";
+import { Image } from "expo-image";
+import { COLORS, FONTS, blurhash } from "../constants";
 import * as Icons from "@expo/vector-icons";
 import { updateProduct } from "../helpers";
 import { useAppContext } from "../context/AppContext";
@@ -33,7 +33,17 @@ const CartItem = ({ product }) => {
       onPress={() => navigation.navigate("Product", { product })}
     >
       <View style={styles.imageView}>
-        <Image source={{ uri: product.img }} style={styles.image} />
+        <Image
+          source={{
+            uri:
+              product.img.url ||
+              "https://api.time.com/wp-content/uploads/2021/06/Pills.jpg?quality=85&w=2703",
+          }}
+          style={styles.image}
+          placeholder={blurhash}
+          transition={500}
+          contentFit="cover"
+        />
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{product.name}</Text>
@@ -80,7 +90,7 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   name: {
     ...FONTS.Regular,

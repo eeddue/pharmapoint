@@ -1,36 +1,72 @@
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { COLORS, FONTS } from "../../constants";
 import { Image } from "react-native";
-import { SearchIcon } from "../../constants/icons";
 import { TextInput } from "react-native";
+import axios from "axios";
+
+import { COLORS, FONTS } from "../../constants";
+import { SearchIcon } from "../../constants/icons";
 import { getGreeting, getStoredProducts } from "../../helpers";
-import { pharmacies, products } from "../../data";
 import PharmacyItem from "../../components/PharmacyItem";
-import Product from "../../components/Product";
 import { useAppContext } from "../../context/AppContext";
+import ProductItem from "../../components/ProductItem";
 
 const Home = ({ navigation }) => {
-  const { setStoredProducts, storedProducts } = useAppContext();
+  const { setCartItems } = useAppContext();
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [pharmacies, setPharmacies] = useState([]);
 
   useEffect(() => {
     (async () => {
       const products = await getStoredProducts();
-      setStoredProducts(products);
+      setCartItems(products);
     })();
   }, []);
+
+  useEffect(() => {
+    const unsub = navigation.addListener("focus", async () => {
+      const { pharmacies, products } = await getHomeItems();
+      setPharmacies(pharmacies);
+      setProducts(products);
+      setLoading(false);
+    });
+
+    return () => unsub;
+  }, [navigation]);
+
+  const getHomeItems = async () => {
+    try {
+      const { data } = await axios.get("/pharmacies/home");
+      return { pharmacies: data.pharmacies, products: data.products };
+    } catch (error) {
+      console.log(error);
+      return [[], []];
+    }
+  };
+
+  const onRefresh = async () => {
+    const { pharmacies, products } = await getHomeItems();
+    setPharmacies(pharmacies);
+    setProducts(products);
+    setRefreshing(false);
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white, paddingBottom: 50 }}>
       {/* greating */}
+
       <Text style={styles.greeting}>{getGreeting()}</Text>
       <Text style={styles.date}>{new Date().toDateString()}</Text>
 
@@ -41,6 +77,7 @@ const Home = ({ navigation }) => {
           style={styles.input}
           value={name}
           onChangeText={setName}
+          placeholderTextColor={COLORS.ltblack}
         />
         <TouchableOpacity
           style={styles.button}
@@ -50,39 +87,63 @@ const Home = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={pharmacies}
-        keyExtractor={(_, index) => index.toString()}
-        contentContainerStyle={{ padding: 10 }}
-        ListHeaderComponent={() => (
-          <View style={styles.flexView}>
-            <Text style={styles.label}>Near you</Text>
-            <Pressable onPress={() => navigation.navigate("Pharmacies")}>
-              <Text style={styles.link}>See all</Text>
-            </Pressable>
-          </View>
+      <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+        {loading ? (
+          <ActivityIndicator
+            size={25}
+            color={COLORS.red}
+            style={{ marginTop: 30 }}
+          />
+        ) : (
+          <FlatList
+            data={pharmacies}
+            keyExtractor={(item) => item._id}
+            contentContainerStyle={{ padding: 10 }}
+            ListHeaderComponent={() => (
+              <View style={styles.flexView}>
+                <Text style={styles.label}>Near you</Text>
+                <Pressable onPress={() => navigation.navigate("Pharmacies")}>
+                  <Text style={styles.link}>See all</Text>
+                </Pressable>
+              </View>
+            )}
+            renderItem={({ item }) => <PharmacyItem pharmacy={item} />}
+            ListFooterComponent={() => (
+              <View style={{ marginTop: 50, marginBottom: 20 }}>
+                <View style={styles.flexView}>
+                  <Text style={styles.label}>Popular products</Text>
+                  <Pressable onPress={() => navigation.navigate("Products")}>
+                    <Text style={styles.link}>See all</Text>
+                  </Pressable>
+                </View>
+                <FlatList
+                  data={products}
+                  keyExtractor={(item) => item._id}
+                  renderItem={({ item, index }) => (
+                    <ProductItem index={index} product={item} />
+                  )}
+                  numColumns={2}
+                  gap={10}
+                  ListEmptyComponent={
+                    <Text style={styles.empty}>No products found you.</Text>
+                  }
+                />
+              </View>
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[COLORS.red]}
+                tintColor={COLORS.red}
+              />
+            }
+            ListEmptyComponent={
+              <Text style={styles.empty}>No pharmacies found near you.</Text>
+            }
+          />
         )}
-        renderItem={({ item }) => <PharmacyItem pharmacy={item} />}
-        ListFooterComponent={() => (
-          <View style={{ marginTop: 50, marginBottom: 20 }}>
-            <View style={styles.flexView}>
-              <Text style={styles.label}>Popular products</Text>
-              <Pressable onPress={() => navigation.navigate("Products")}>
-                <Text style={styles.link}>See all</Text>
-              </Pressable>
-            </View>
-            <FlatList
-              data={products}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item, index }) => (
-                <Product index={index} product={item} />
-              )}
-              numColumns={2}
-              gap={10}
-            />
-          </View>
-        )}
-      />
+      </View>
     </View>
   );
 };
@@ -95,6 +156,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     fontSize: 20,
     marginTop: 10,
+    color: COLORS.black,
   },
   date: {
     ...FONTS.Regular,
@@ -107,11 +169,12 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: "center",
     margin: 10,
+    marginBottom: 20,
   },
   input: {
     height: 50,
     flex: 1,
-    borderRadius: 5,
+    borderRadius: 10,
     backgroundColor: COLORS.gray,
     padding: 10,
     ...FONTS.Regular,
@@ -120,15 +183,16 @@ const styles = StyleSheet.create({
   button: {
     height: 50,
     width: 50,
-    borderRadius: 5,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.red,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
   },
   icon: {
     width: 30,
     height: 30,
-    tintColor: COLORS.white,
+    tintColor: COLORS.red,
   },
   flexView: {
     flexDirection: "row",
@@ -148,5 +212,12 @@ const styles = StyleSheet.create({
   products: {
     flexDirection: "row",
     flexWrap: "wrap",
+  },
+  empty: {
+    textAlign: "center",
+    ...FONTS.Regular,
+    marginTop: 50,
+    color: COLORS.ltblack,
+    fontSize: 12,
   },
 });

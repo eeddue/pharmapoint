@@ -19,7 +19,7 @@ const Forgot = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handlePress = async () => {
-    navigation.navigate("Reset");
+    navigation.navigate("Verify");
   };
 
   return (
@@ -63,7 +63,7 @@ const Forgot = ({ navigation }) => {
         <View style={styles.footer}>
           <Pressable
             disabled={loading}
-            onPress={() => navigation.navigate("Register")}
+            onPress={() => navigation.navigate("Login")}
           >
             <Text style={styles.link}>Login</Text>
           </Pressable>

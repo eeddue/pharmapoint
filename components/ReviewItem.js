@@ -2,6 +2,8 @@ import { Image, StyleSheet, Text, View } from "react-native";
 import React from "react";
 import { COLORS, FONTS } from "../constants";
 import * as Icons from "@expo/vector-icons";
+import { AvatarIcon } from "../constants/icons";
+import moment from "moment";
 
 const ReviewItem = ({ review }) => {
   const renderRating = () => {
@@ -24,14 +26,14 @@ const ReviewItem = ({ review }) => {
   return (
     <View style={styles.item}>
       <View style={styles.avatarView}>
-        <Image source={{ uri: review.image }} style={styles.image} />
+        <Image source={AvatarIcon} style={styles.avatar} />
       </View>
       <View style={{ flex: 1 }}>
         <View style={styles.flexView}>
-          <Text style={styles.name}>{review.name}</Text>
-          <Text style={styles.time}>6d ago</Text>
+          <Text style={styles.name}>{review.reviewer.username}</Text>
+          <Text style={styles.time}>{moment(review.createdAt).fromNow()}</Text>
         </View>
-        <Text style={styles.desc}>{review.desc}</Text>
+        <Text style={styles.desc}>{review.description}</Text>
         {renderRating()}
       </View>
     </View>
@@ -56,6 +58,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderColor: COLORS.gray,
     borderWidth: 1,
+  },
+  avatar: {
+    width: 35,
+    height: 35,
+    tintColor: COLORS.ltblack,
   },
   image: {
     width: "100%",

@@ -22,9 +22,7 @@ const Cart = ({ navigation }) => {
       setFetching(false);
     });
 
-    return () => {
-      unsub;
-    };
+    return () => unsub;
   }, []);
 
   return (
@@ -43,7 +41,7 @@ const Cart = ({ navigation }) => {
           )}
           keyExtractor={(_, index) => index.toString()}
           renderItem={({ item }) => <CartItem product={item} />}
-          contentContainerStyle={{ backgroundColor: COLORS.gray, flex: 1 }}
+          contentContainerStyle={{ backgroundColor: COLORS.white, flex: 1 }}
           bounces={false}
         />
       )}
@@ -62,7 +60,7 @@ const styles = StyleSheet.create({
   headerText: {
     textAlign: "center",
     ...FONTS.SemiBold,
-    fontSize: 20,
+    fontSize: 15,
   },
   empty: {
     ...FONTS.Regular,

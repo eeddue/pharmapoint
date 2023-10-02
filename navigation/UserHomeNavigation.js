@@ -1,7 +1,7 @@
 import { Image, StyleSheet } from "react-native";
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Home, Chats, Cart, History, Profile } from "../screens/signedIn";
+import { Home, Inbox, Cart, History, Profile } from "../screens/signedIn";
 import { COLORS, FONTS } from "../constants";
 import {
   CartFillIcon,
@@ -16,13 +16,11 @@ import {
   UserIcon,
 } from "../constants/icons";
 import { useAppContext } from "../context/AppContext";
-import { useNavigation } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator();
 
 const UserHomeNavigation = () => {
-  const { storedProducts, cartItems, user } = useAppContext();
-  const navigation = useNavigation();
+  const { cartItems } = useAppContext();
 
   return (
     <Tab.Navigator
@@ -51,8 +49,8 @@ const UserHomeNavigation = () => {
         }}
       />
       <Tab.Screen
-        name="Chats"
-        component={Chats}
+        name="Inbox"
+        component={Inbox}
         options={{
           tabBarIcon: ({ focused }) => (
             <Image
@@ -78,11 +76,11 @@ const UserHomeNavigation = () => {
               ]}
             />
           ),
-          tabBarBadge: cartItems.length || 0,
+          tabBarBadge: cartItems?.length,
           tabBarBadgeStyle: styles.badgeStyle,
         }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="History"
         component={History}
         options={{
@@ -98,7 +96,7 @@ const UserHomeNavigation = () => {
             />
           ),
         }}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         component={Profile}

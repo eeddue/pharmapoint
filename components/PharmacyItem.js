@@ -1,19 +1,31 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
-import PharmacyAvatar from "./PharmacyAvatar";
 import { COLORS, FONTS } from "../constants";
 import * as Icons from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import commaNumber from "comma-number";
+import { useAppContext } from "../context/AppContext";
+import { calculateDistance, getWorkingHours } from "../helpers";
+import { PharmacyIcon } from "../constants/icons";
 
 const PharmacyItem = ({ pharmacy }) => {
   const navigation = useNavigation();
+  const { location } = useAppContext();
+
+  const distance = calculateDistance(
+    location.latitude,
+    location.longitude,
+    parseFloat(pharmacy.location.latitude),
+    parseFloat(pharmacy.location.longitude)
+  );
 
   const renderRating = () => {
     return (
       <View style={{ flexDirection: "row", marginRight: 5 }}>
         {[...Array(5)].map((_, index) => {
-          const isChecked = index + 1 <= parseInt(pharmacy?.rating);
+          const isChecked =
+            index + 1 <=
+            parseInt(pharmacy?.total_stars) / pharmacy.review_count;
           return (
             <Icons.AntDesign
               key={index}
@@ -33,7 +45,9 @@ const PharmacyItem = ({ pharmacy }) => {
       onPress={() => navigation.navigate("Pharmacy", { pharmacy })}
       style={styles.item}
     >
-      <PharmacyAvatar avatar={pharmacy.pharm_img} />
+      <View style={styles.avatarView}>
+        <Image source={PharmacyIcon} style={styles.image} />
+      </View>
       <View style={{ marginLeft: 10 }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           {renderRating()}
@@ -41,10 +55,12 @@ const PharmacyItem = ({ pharmacy }) => {
             ({commaNumber(pharmacy?.review_count)} reviews)
           </Text>
         </View>
-        <Text style={styles.name}>{pharmacy?.pharmacy_name}</Text>
+        <Text style={styles.name}>{pharmacy?.name}</Text>
         <Text style={styles.distance}>
-          2km away |{" "}
-          <Text style={{ fontSize: 10 }}>{pharmacy?.working_hours}</Text>
+          {distance}km away |{" "}
+          <Text style={{ fontSize: 10 }}>
+            {getWorkingHours(pharmacy.openingTime, pharmacy.closingTime)}
+          </Text>
         </Text>
       </View>
     </TouchableOpacity>
@@ -54,6 +70,20 @@ const PharmacyItem = ({ pharmacy }) => {
 export default PharmacyItem;
 
 const styles = StyleSheet.create({
+  avatarView: {
+    width: 50,
+    height: 50,
+    borderRadius: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.gray,
+    overflow: "hidden",
+  },
+  image: {
+    width: 30,
+    height: 30,
+    tintColor: COLORS.black,
+  },
   item: {
     marginTop: 10,
     flexDirection: "row",

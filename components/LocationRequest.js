@@ -1,31 +1,58 @@
-import { Image, TouchableOpacity, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import React, { useState } from "react";
 import { COLORS, FONTS } from "../constants";
-import { AppIcon } from "../constants/icons";
+import { NoLocationIcon } from "../constants/icons";
+import { getCurrentLocation, showToast } from "../helpers";
+import { useAppContext } from "../context/AppContext";
 
-const LocationRequest = ({ getLocation }) => {
+const LocationRequest = () => {
+  const [loading, setLoading] = useState(false);
+  const { setLocation } = useAppContext();
+
+  const handleLocation = async () => {
+    setLoading(true);
+    await getCurrentLocation()
+      .then((location) => setLocation(location))
+      .catch(() =>
+        showToast("error", "There was an error.", "Please try again.")
+      )
+      .finally(() => setLoading(false));
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white, marginTop: -20 }}>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 10,
-        }}
-      >
-        <Image source={AppIcon} style={styles.image} />
-        <Text style={styles.text}>
-          This app requires location permission for usage. Please allow location
-          access to continue.
+    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Image
+          source={NoLocationIcon}
+          style={{ width: 150, height: 150, tintColor: COLORS.red }}
+        />
+      </View>
+      <View style={{ flex: 1, padding: 10, justifyContent: "center" }}>
+        <Text style={styles.title}>
+          This application uses your current location for the best experience.
+        </Text>
+        <Text style={styles.label}>
+          Please allow us to access your location to continue.
         </Text>
 
         <TouchableOpacity
           activeOpacity={0.5}
-          onPress={getLocation}
           style={styles.button}
+          onPress={handleLocation}
         >
-          <Text style={styles.buttonText}>Allow</Text>
+          {loading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Text style={styles.buttonText}>Allow</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -35,32 +62,29 @@ const LocationRequest = ({ getLocation }) => {
 export default LocationRequest;
 
 const styles = StyleSheet.create({
-  text: {
-    marginHorizontal: 10,
-    ...FONTS.Regular,
-    fontSize: 16,
+  title: {
+    ...FONTS.SemiBold,
+    margin: 10,
     textAlign: "center",
+    fontSize: 18,
+  },
+  label: {
+    ...FONTS.Regular,
+    textAlign: "center",
+    fontSize: 14,
+    color: COLORS.ltblack,
   },
   button: {
-    height: 45,
     backgroundColor: COLORS.red,
-    marginHorizontal: 10,
+    height: 50,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 40,
-    borderRadius: 10,
-    width: "100%",
+    marginTop: 30,
   },
   buttonText: {
-    fontSize: 15,
-    ...FONTS.SemiBold,
     color: COLORS.white,
-  },
-  image: {
-    width: 200,
-    alignSelf: "center",
-    height: 200,
-    alignSelf: "center",
-    marginVertical: 30,
+    fontSize: 16,
+    ...FONTS.SemiBold,
   },
 });

@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,9 +12,10 @@ import React, { useState } from "react";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import axios from "axios";
+import { showToast } from "../../helpers";
 
 const Register = ({ navigation }) => {
-  const [selected, setSelected] = useState("user");
+  const [selected, setSelected] = useState("customer");
   const active = (val) => selected === val;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,9 +30,14 @@ const Register = ({ navigation }) => {
 
     setLoading(true);
     await axios
-      .post("/register", { username, email, password, role: selected })
+      .post("/auth/register", {
+        username,
+        email,
+        password,
+        role: selected,
+      })
       .then(() => navigation.navigate("Login"))
-      .catch((error) => console.log(error))
+      .catch((error) => showToast("error", "Sorry", error.response.data.msg))
       .finally(() => setLoading(false));
   };
 
@@ -46,19 +51,23 @@ const Register = ({ navigation }) => {
           <View style={styles.actions}>
             <Pressable
               disabled={loading}
-              onPress={() => setSelected("user")}
+              onPress={() => setSelected("customer")}
               style={[
                 styles.action,
-                { backgroundColor: active("user") ? COLORS.red : COLORS.gray },
+                {
+                  backgroundColor: active("customer")
+                    ? COLORS.red
+                    : COLORS.gray,
+                },
               ]}
             >
               <Text
                 style={[
                   styles.actionText,
-                  { color: active("user") ? COLORS.white : COLORS.label },
+                  { color: active("customer") ? COLORS.white : COLORS.label },
                 ]}
               >
-                User
+                Customer
               </Text>
             </Pressable>
             <Pressable
@@ -92,7 +101,7 @@ const Register = ({ navigation }) => {
             placeholder="Username"
             style={styles.input}
             value={username}
-            onChangeText={setUsername}
+            onChangeText={(val) => setUsername(val.toLowerCase().trim())}
           />
         </View>
 
@@ -104,7 +113,7 @@ const Register = ({ navigation }) => {
             style={styles.input}
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(val) => setEmail(val.toLowerCase().trim())}
           />
         </View>
         <View style={{ marginTop: 15 }}>
@@ -114,7 +123,7 @@ const Register = ({ navigation }) => {
             placeholder="Password"
             style={styles.input}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(val) => setPassword(val.trim())}
             secureTextEntry
           />
         </View>
@@ -126,7 +135,7 @@ const Register = ({ navigation }) => {
             placeholder="Confirm Password"
             style={styles.input}
             value={cPass}
-            onChangeText={setCPass}
+            onChangeText={(val) => setCPass(val.trim())}
             secureTextEntry
           />
         </View>
@@ -171,7 +180,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    ...FONTS.Regular,
+    ...FONTS.SemiBold,
     marginBottom: 3,
   },
   input: {

@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -14,20 +15,29 @@ import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useAppContext } from "../../context/AppContext";
+import { showToast } from "../../helpers";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { setUser } = useAppContext();
 
   const handlePress = async () => {
     if (!email || !password) return alert("All fields are required.");
 
     setLoading(true);
     await axios
-      .post("/login", { username: email, password })
-      .then(() => navigation.navigate("Bottom"))
-      .catch((error) => console.log(error))
+      .post("/auth/login", { email, password })
+      .then(async ({ data }) => {
+        const dataToStore = { token: data.token, ...data.user };
+        await AsyncStorage.setItem("user", JSON.stringify(dataToStore));
+        setUser(dataToStore);
+        navigation.navigate("Bottom");
+      })
+      .catch((error) => showToast("error", "Sorry", error.response.data.msg))
       .finally(() => setLoading(false));
   };
 
@@ -47,7 +57,7 @@ const Login = ({ navigation }) => {
             style={styles.input}
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(val) => setEmail(val.trim().toLowerCase())}
           />
         </View>
         <View style={{ marginTop: 15 }}>
@@ -57,7 +67,7 @@ const Login = ({ navigation }) => {
             placeholder="Password"
             style={styles.input}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(val) => setPassword(val.trim())}
             secureTextEntry
           />
         </View>
@@ -115,7 +125,7 @@ const styles = StyleSheet.create({
 
   label: {
     fontSize: 14,
-    ...FONTS.Regular,
+    ...FONTS.SemiBold,
     marginBottom: 3,
   },
   input: {

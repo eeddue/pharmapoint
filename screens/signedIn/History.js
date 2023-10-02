@@ -13,7 +13,11 @@ const History = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>History</Text>
       </View>
-      <Text>History</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ fontSize: 20, ...FONTS.Regular, color: COLORS.ltblack }}>
+          Coming soon
+        </Text>
+      </View>
     </View>
   );
 };
