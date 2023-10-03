@@ -36,15 +36,13 @@ const Home = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    const unsub = navigation.addListener("focus", async () => {
+    (async () => {
       const { pharmacies, products } = await getHomeItems();
       setPharmacies(pharmacies);
       setProducts(products);
       setLoading(false);
-    });
-
-    return () => unsub;
-  }, [navigation]);
+    })();
+  }, []);
 
   const getHomeItems = async () => {
     try {

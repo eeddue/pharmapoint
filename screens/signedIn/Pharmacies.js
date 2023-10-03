@@ -11,6 +11,7 @@ import {
 import React, { useEffect, useState } from "react";
 import * as Icons from "@expo/vector-icons";
 import axios from "axios";
+
 import { COLORS, FONTS } from "../../constants";
 import PharmacyItem from "../../components/PharmacyItem";
 
@@ -57,6 +58,7 @@ const Pharmacies = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
+      {/* header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()}>
           <Icons.Ionicons name="arrow-back" size={25} />
@@ -83,6 +85,8 @@ const Pharmacies = ({ navigation }) => {
           )}
         </Pressable>
       </View>
+
+      {/* pharmacies */}
       {loading ? (
         <ActivityIndicator
           size={30}
@@ -97,7 +101,7 @@ const Pharmacies = ({ navigation }) => {
             <PharmacyItem index={index} pharmacy={item} />
           )}
           ListEmptyComponent={() => (
-            <Text style={styles.empty}>No pharmacies found.</Text>
+            <Text style={styles.empty}>No nearby pharmacies.</Text>
           )}
           contentContainerStyle={{ padding: 10 }}
           refreshControl={
@@ -130,9 +134,9 @@ const styles = StyleSheet.create({
     ...FONTS.Regular,
     borderRadius: 10,
     flex: 1,
-    padding: 10,
     backgroundColor: COLORS.gray,
     paddingHorizontal: 15,
+    color: COLORS.ltblack,
   },
   empty: {
     ...FONTS.Regular,

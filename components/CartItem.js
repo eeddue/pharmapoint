@@ -19,11 +19,11 @@ const CartItem = ({ product }) => {
   const navigation = useNavigation();
 
   const handleApp = async () => {
-    await updateProduct("add", product.id).then((data) => setCartItems(data));
+    await updateProduct("add", product._id).then((data) => setCartItems(data));
   };
 
   const handleReduce = () => {
-    updateProduct("minus", product.id).then((data) => setCartItems(data));
+    updateProduct("minus", product._id).then((data) => setCartItems(data));
   };
 
   return (
@@ -34,11 +34,7 @@ const CartItem = ({ product }) => {
     >
       <View style={styles.imageView}>
         <Image
-          source={{
-            uri:
-              product.img.url ||
-              "https://api.time.com/wp-content/uploads/2021/06/Pills.jpg?quality=85&w=2703",
-          }}
+          source={{ uri: product.img.url }}
           style={styles.image}
           placeholder={blurhash}
           transition={500}
@@ -81,11 +77,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   imageView: {
-    height: 70,
-    width: 70,
+    height: 60,
+    width: 60,
     borderRadius: 5,
     backgroundColor: COLORS.gray,
     overflow: "hidden",
+    borderColor: COLORS.gray,
+    borderWidth: 1,
   },
   image: {
     width: "100%",

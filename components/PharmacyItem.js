@@ -100,12 +100,11 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 13,
-    marginVertical: 3,
     ...FONTS.Bold,
   },
   distance: {
     ...FONTS.Regular,
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.ltblack,
   },
 });

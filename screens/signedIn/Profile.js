@@ -58,15 +58,9 @@ const Profile = () => {
         bounces={false}
       >
         <View style={styles.avatarView}>
-          {image ? (
-            <Image
-              style={{ width: "100%", height: "100%", borderRadius: 30 }}
-              source={{ uri: image }}
-            />
-          ) : (
-            <Image style={styles.avatar} source={AvatarIcon} />
-          )}
-          <TouchableOpacity
+          <Image style={styles.avatar} source={AvatarIcon} />
+
+          {/* <TouchableOpacity
             activeOpacity={0.5}
             style={styles.edit}
             onPress={() => {
@@ -74,7 +68,7 @@ const Profile = () => {
             }}
           >
             <Icons.Feather name="edit-2" size={15} color={COLORS.white} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
         <View style={styles.view}>
           <Text style={styles.label}>Username</Text>
@@ -123,11 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  avatar: {
-    height: 60,
-    width: 60,
-    tintColor: COLORS.ltblack,
-  },
+  avatar: { height: 60, width: 60, tintColor: COLORS.ltblack },
   edit: {
     width: 30,
     height: 30,
@@ -141,21 +131,14 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: COLORS.white,
   },
-  view: {
-    padding: 10,
-    borderTopColor: COLORS.gray,
-    borderTopWidth: 1,
-  },
+  view: { padding: 10, borderTopColor: COLORS.gray, borderTopWidth: 1 },
   label: {
     ...FONTS.Regular,
     fontSize: 13,
     color: COLORS.ltblack,
     marginBottom: 2,
   },
-  value: {
-    ...FONTS.SemiBold,
-    fontSize: 13,
-  },
+  value: { ...FONTS.SemiBold, fontSize: 13 },
   moreItem: {
     flexDirection: "row",
     gap: 10,

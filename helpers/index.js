@@ -3,6 +3,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
 import moment from "moment";
+import commaNumber from "comma-number";
 
 export const getGreeting = () => {
   const hour = new Date().getHours();
@@ -26,7 +27,7 @@ export const removeProductFromStore = async (productId) => {
   try {
     const products = await getStoredProducts();
 
-    const filtered = products.filter((prod) => prod.id !== productId);
+    const filtered = products.filter((prod) => prod._id !== productId);
     await AsyncStorage.setItem("products", JSON.stringify(filtered));
     return filtered;
   } catch (error) {
@@ -46,12 +47,12 @@ export const getStoredProducts = async () => {
 export const updateProduct = async (type, productId) => {
   try {
     let products = await getStoredProducts();
-    let product = products.find((prod) => prod.id === productId);
+    let product = products.find((prod) => prod._id === productId);
     if (type === "add") {
       product.count += 1;
     } else {
       if (product.count === 1) {
-        products = products.filter((prod) => prod.id !== productId);
+        products = products.filter((prod) => prod._id !== productId);
       } else {
         product.count -= 1;
       }
@@ -113,7 +114,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
   const distance = earthRadius * c; // Distance in kilometers (or miles)
 
-  return distance.toFixed(1);
+  return commaNumber(distance.toFixed(1));
 };
 
 export const showToast = (type, text1, text2) => {

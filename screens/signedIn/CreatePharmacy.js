@@ -13,7 +13,8 @@ import {
 import React, { useState } from "react";
 import axios from "axios";
 import * as Icons from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import moment from "moment";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useNavigation } from "@react-navigation/native";
 
 import { COLORS, FONTS } from "../../constants";
@@ -25,17 +26,18 @@ const CreatePharmacy = ({ route }) => {
   const navigation = useNavigation();
   const { user } = useAppContext();
 
+  const [visible, setVisible] = useState(false);
   const [openingTime, setOpeningTime] = useState(
-    new Date(pharmacy?.openingTime) || new Date()
+    pharmacy?.openingTime || new Date()
   );
   const [closingTime, setClosingTime] = useState(
-    new Date(pharmacy?.closingTime) || new Date()
+    pharmacy?.closingTime || new Date()
   );
+  const [source, setSource] = useState("");
   const [loading, setLoading] = useState(false);
   const [getting, setGetting] = useState(false);
   const [location, setLocation] = useState(pharmacy?.location || null);
   const [name, setName] = useState(pharmacy?.name || "");
-  const [phone, setPhone] = useState(pharmacy?.phone || "");
   const [license, setLicense] = useState(pharmacy?.license_no || "");
   const [id, setId] = useState(pharmacy?.owner_id_no.toString() || "");
 
@@ -48,13 +50,12 @@ const CreatePharmacy = ({ route }) => {
   };
 
   const handleCreate = async () => {
-    if (!location || !name.trim() || !phone || !license.trim() || !id)
+    if (!location || !name.trim() || !license.trim() || !id)
       return showToast("error", "Fields required.", "Fill in all the fields.");
 
     setLoading(true);
     const data = {
       name: name.trim(),
-      phone,
       license_no: license.trim(),
       location: {
         latitude: location.latitude,
@@ -71,16 +72,23 @@ const CreatePharmacy = ({ route }) => {
       await axios
         .patch(`/pharmacies/${pharmacy._id}`, data, { headers })
         .then(() => navigation.goBack())
-        .catch((error) => console.log(error.response.data.msg))
+        .catch((error) => showToast("error", "Sorry", error.response.data.msg))
         .finally(() => setLoading(false));
     } else {
       await axios
         .post("/pharmacies", data, { headers })
         .then(() => navigation.goBack())
-        .catch((error) => console.log(error.response.data.msg))
+        .catch((error) => showToast("error", "Sorry", error.response.data.msg))
         .finally(() => setLoading(false));
     }
   };
+
+  const togglePicker = (src) => {
+    setVisible((prev) => !prev);
+    setSource(src);
+  };
+
+  const formattedDate = (date) => moment(date).format("h:mm A");
 
   return (
     <KeyboardAvoidingView
@@ -115,18 +123,6 @@ const CreatePharmacy = ({ route }) => {
         </View>
 
         <View style={{ marginTop: 15 }}>
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            editable={!loading}
-            placeholder="+254123456789"
-            style={styles.input}
-            value={phone}
-            keyboardType="number-pad"
-            onChangeText={(value) => setPhone(value.trim())}
-          />
-        </View>
-
-        <View style={{ marginTop: 15 }}>
           <Text style={styles.label}>National ID</Text>
           <TextInput
             editable={!loading}
@@ -150,27 +146,25 @@ const CreatePharmacy = ({ route }) => {
         </View>
 
         <View style={{ marginTop: 15, flexDirection: "row", gap: 10 }}>
-          <View style={{ flex: 1, alignItems: "flex-start" }}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.label}>Opening time</Text>
-            <DateTimePicker
-              onChange={(e) =>
-                setOpeningTime(new Date(e.nativeEvent.timestamp))
-              }
-              disabled={loading}
-              mode="time"
-              value={openingTime}
-            />
+            <Pressable
+              style={styles.timeButton}
+              onPress={() => togglePicker("opening")}
+            >
+              <Text style={styles.time}>{formattedDate(openingTime)}</Text>
+              <Icons.Entypo name="chevron-small-down" size={20} />
+            </Pressable>
           </View>
-          <View style={{ flex: 1, alignItems: "flex-start" }}>
+          <View style={{ flex: 1 }}>
             <Text style={styles.label}>Closing time</Text>
-            <DateTimePicker
-              onChange={(e) =>
-                setClosingTime(new Date(e.nativeEvent.timestamp))
-              }
-              disabled={loading}
-              mode="time"
-              value={closingTime}
-            />
+            <Pressable
+              style={styles.timeButton}
+              onPress={() => togglePicker("closing")}
+            >
+              <Text style={styles.time}>{formattedDate(closingTime)}</Text>
+              <Icons.Entypo name="chevron-small-down" size={20} />
+            </Pressable>
           </View>
         </View>
 
@@ -213,6 +207,19 @@ const CreatePharmacy = ({ route }) => {
           )}
         </TouchableOpacity>
       </ScrollView>
+      <DateTimePickerModal
+        isVisible={visible}
+        mode="time"
+        onConfirm={(date) => {
+          if (source === "opening") {
+            setOpeningTime(date);
+          } else {
+            setClosingTime(date);
+          }
+          togglePicker();
+        }}
+        onCancel={togglePicker}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -277,5 +284,19 @@ const styles = StyleSheet.create({
   image: {
     height: "100%",
     width: "100%",
+  },
+  timeButton: {
+    height: 45,
+    borderRadius: 5,
+    justifyContent: "space-between",
+    backgroundColor: COLORS.gray,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+  },
+  time: {
+    ...FONTS.SemiBold,
+    color: COLORS.red,
   },
 });

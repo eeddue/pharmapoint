@@ -1,43 +1,58 @@
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Image } from "expo-image";
 import React, { useState } from "react";
 import * as Icons from "@expo/vector-icons";
+import axios from "axios";
 import { COLORS, FONTS, blurhash, SHADOW } from "../../constants";
 import { useAppContext } from "../../context/AppContext";
-import { addProductToStore, removeProductFromStore } from "../../helpers";
+import {
+  addProductToStore,
+  removeProductFromStore,
+  showToast,
+} from "../../helpers";
 import PharmacyItem from "../../components/PharmacyItem";
 import { CartFillIcon, CartIcon } from "../../constants/icons";
+import ActionsModal from "../../components/ActionsModal";
 
 const Product = ({ route, navigation }) => {
   const { product } = route.params;
-  const { cartItems, setCartItems } = useAppContext();
+  const { user, cartItems, setCartItems } = useAppContext();
   const isInStore = cartItems?.some((prod) => prod._id === product._id);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [visible, setVisible] = useState(false);
-  const isMine = true;
+  const isMine = user?._id === product.user;
 
   const handleCart = async () => {
     setLoading(true);
     if (isInStore) {
-      await removeProductFromStore(product.id).then((res) => setCartItems(res));
+      await removeProductFromStore(product._id).then((res) => setCartItems(res));
     } else {
       await addProductToStore(product).then((res) => setCartItems(res));
     }
     setLoading(false);
   };
 
-  const handleDelete = async () => {};
+  const handleDelete = async () => {
+    setDeleting(true);
+    await axios
+      .delete(`/products/${product._id}`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      })
+      .then(() => {
+        setVisible(false);
+        navigation.goBack();
+      })
+      .catch((error) => showToast("error", "Sorry", error.response.data.msg))
+      .finally(() => setDeleting(false));
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
@@ -59,7 +74,7 @@ const Product = ({ route, navigation }) => {
           style={styles.goback}
         >
           {loading ? (
-            <ActivityIndicator size={15} color={COLORS.red} />
+            <ActivityIndicator size={25} color={COLORS.red} />
           ) : (
             <Image
               source={isInStore ? CartFillIcon : CartIcon}
@@ -74,11 +89,7 @@ const Product = ({ route, navigation }) => {
       <ScrollView bounces={false}>
         <View style={styles.imageView}>
           <Image
-            source={{
-              uri:
-                product.img.url ||
-                "https://api.time.com/wp-content/uploads/2021/06/Pills.jpg?quality=85&w=2703",
-            }}
+            source={{ uri: product.img.url }}
             style={styles.image}
             placeholder={blurhash}
             transition={500}
@@ -97,49 +108,27 @@ const Product = ({ route, navigation }) => {
         </View>
       </ScrollView>
 
+      {isMine ? (
+        <View>
+          <Pressable
+            disabled={loading}
+            onPress={() => setVisible((prev) => !prev)}
+            style={styles.delete}
+          >
+            <Icons.SimpleLineIcons name="trash" size={25} />
+          </Pressable>
+        </View>
+      ) : null}
+
       {/* delete modal */}
-      <Modal transparent visible={visible} animationType="slide">
-        <Pressable
-          style={{ flex: 1 }}
-          onPress={() => setVisible((prev) => !prev)}
-        />
-        <SafeAreaView style={[styles.modal, { padding: 10 }]}>
-          <View style={{ padding: 10 }}>
-            <View>
-              <Text style={styles.bigText}>Delete product</Text>
-              <Text style={styles.smallText}>
-                Are you sure you want to delete{" "}
-                <Text style={{ color: COLORS.red }}>{product.name}</Text> from
-                it's respective pharmacy?
-              </Text>
-            </View>
-            <View style={styles.actions}>
-              <TouchableOpacity
-                disabled={deleting}
-                activeOpacity={0.5}
-                onPress={() => setVisible((prev) => !prev)}
-                style={[styles.action, { backgroundColor: COLORS.gray }]}
-              >
-                <Text style={styles.actionText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                disabled={deleting}
-                activeOpacity={0.5}
-                onPress={handleDelete}
-                style={[styles.action, { backgroundColor: COLORS.red }]}
-              >
-                {deleting ? (
-                  <ActivityIndicator color={COLORS.white} size={20} />
-                ) : (
-                  <Text style={[styles.actionText, { color: COLORS.white }]}>
-                    Confirm
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <ActionsModal
+        visible={visible}
+        setVisible={setVisible}
+        loading={deleting}
+        text={` Are you sure you want to delete ${product.name} from it's respective pharmacy?`}
+        handleAction={handleDelete}
+        title="Delete product"
+      />
     </View>
   );
 };
@@ -156,56 +145,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerText: { ...FONTS.SemiBold, fontSize: 15 },
-  goback: {
-    height: 40,
-    width: 40,
-    borderRadius: 5,
-    backgroundColor: COLORS.white,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   imageView: { height: 300, backgroundColor: COLORS.gray },
-
   image: { width: "100%", height: "100%", resizeMode: "cover" },
-
   name: { ...FONTS.Bold, fontSize: 20 },
-
   category: { ...FONTS.Regular, marginVertical: 5 },
-
   desc: { ...FONTS.Regular, fontSize: 15 },
-
   price: { ...FONTS.Bold, fontSize: 14, color: COLORS.red, marginVertical: 10 },
-
-  modal: {
-    backgroundColor: COLORS.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    ...SHADOW,
-    borderTopColor: COLORS.gray,
-    borderTopWidth: 1,
-  },
-  bigText: { fontSize: 20, ...FONTS.Bold, textAlign: "center" },
-  smallText: {
-    fontSize: 14,
-    ...FONTS.Regular,
-    textAlign: "center",
-    color: COLORS.ltblack,
-    marginTop: 20,
-    marginBottom: 50,
-  },
-  actions: { flexDirection: "row", alignItems: "center", gap: 10 },
-  action: {
-    height: 50,
-    flex: 1,
-    borderRadius: 5,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  actionText: { fontSize: 15, ...FONTS.SemiBold },
   delete: {
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
+    ...SHADOW,
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.gray,
+    borderWidth: 1,
+    position: "absolute",
+    bottom: 10,
+    right: 10,
   },
 });

@@ -32,7 +32,11 @@ const Cart = ({ navigation }) => {
       </View>
 
       {fetching ? (
-        <ActivityIndicator size={30} color={COLORS.red} />
+        <ActivityIndicator
+          size={30}
+          color={COLORS.red}
+          style={{ marginVertical: 30 }}
+        />
       ) : (
         <FlatList
           data={cartItems}

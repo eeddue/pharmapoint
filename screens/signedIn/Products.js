@@ -126,7 +126,7 @@ const Products = ({ navigation }) => {
           data={name.trim().length ? filtered : products}
           keyExtractor={(_, index) => index}
           renderItem={({ item, index }) => (
-            <ProductItem index={index} ItmProductItem={item} />
+            <ProductItem index={index} product={item} />
           )}
           ListEmptyComponent={() => (
             <Text style={styles.empty}>No products found.</Text>
@@ -221,9 +221,9 @@ const styles = StyleSheet.create({
     ...FONTS.Regular,
     borderRadius: 10,
     flex: 1,
-    padding: 10,
     backgroundColor: COLORS.gray,
     paddingHorizontal: 15,
+    color: COLORS.ltblack,
   },
   empty: {
     ...FONTS.Regular,

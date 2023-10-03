@@ -45,7 +45,7 @@ const Reviews = ({ route }) => {
           bounces={false}
           data={reviews}
           ListEmptyComponent={() => (
-            <Text style={styles.empty}>Your have no chats.</Text>
+            <Text style={styles.empty}>No one has reviewed this pharmacy.</Text>
           )}
           keyExtractor={(item) => item._id}
           renderItem={({ item, index }) => (
