@@ -1,11 +1,11 @@
 import {
   StyleSheet,
-  Text,
   Pressable,
   View,
   TextInput,
   FlatList,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import * as Icons from "@expo/vector-icons";
@@ -14,7 +14,6 @@ import { COLORS, FONTS } from "../../constants";
 import PharmacyItem from "../../components/PharmacyItem";
 import LoadingMore from "../../components/LoadingMore";
 import ListEmptyComponent from "../../components/ListEmptyComponent";
-import RefreshComponent from "../../components/RefreshComponent";
 import { getPharmacies, searchPharmacies } from "../../api";
 
 const Pharmacies = ({ navigation }) => {
@@ -99,8 +98,8 @@ const Pharmacies = ({ navigation }) => {
 
       <FlatList
         data={pharmacies}
-        keyExtractor={(phar) => phar._id}
-        contentContainerStyle={{ padding: 10 }}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={{ padding: 10, flex: 1 }}
         renderItem={({ item, index }) => (
           <PharmacyItem index={index} pharmacy={item} />
         )}
@@ -110,7 +109,12 @@ const Pharmacies = ({ navigation }) => {
         ListFooterComponent={fetching || loading ? LoadingMore : null}
         onEndReached={loadMore}
         refreshControl={
-          <RefreshComponent refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.red]}
+            tintColor={COLORS.red}
+          />
         }
       />
     </View>

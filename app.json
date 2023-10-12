@@ -26,6 +26,7 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.RECORD_AUDIO"
       ],
+
       "package": "com.eeddue.PharmaPoint"
     },
     "web": {

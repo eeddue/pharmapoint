@@ -11,7 +11,9 @@ import { StatusBar } from "expo-status-bar";
 import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 
 SplashScreen.preventAutoHideAsync();
-axios.defaults.baseURL = "http://192.168.1.8:5000/api/v1";
+
+axios.defaults.baseURL =
+  "https://pharmapoint-822e63c79731.herokuapp.com/api/v1";
 
 export default function App() {
   const [fontsLoaded] = useFonts({

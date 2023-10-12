@@ -9,17 +9,16 @@ import {
   Keyboard,
   Modal,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import * as Icons from "@expo/vector-icons";
-import axios from "axios";
 
 import { COLORS, FONTS, SHADOW } from "../../constants";
 import { categories } from "../../data";
 import ProductItem from "../../components/ProductItem";
 import LoadingMore from "../../components/LoadingMore";
 import ListEmptyComponent from "../../components/ListEmptyComponent";
-import RefreshComponent from "../../components/RefreshComponent";
 import { getProducts, searchProducts } from "../../api";
 
 const Products = ({ navigation }) => {
@@ -139,7 +138,12 @@ const Products = ({ navigation }) => {
         ListFooterComponent={fetching || loading ? LoadingMore : null}
         onEndReached={loadMore}
         refreshControl={
-          <RefreshComponent refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.red]}
+            tintColor={COLORS.red}
+          />
         }
       />
 

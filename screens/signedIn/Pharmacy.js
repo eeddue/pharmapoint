@@ -35,7 +35,8 @@ const Pharmacy = ({ route, navigation }) => {
   const [rating, setRating] = useState(1);
   const [review, setReview] = useState("");
 
-  const isMine = user?._id === pharmacy.owner._id;
+  const isMine =
+    user?._id === pharmacy.owner._id || user?.pharmacies.includes(pharmacy._id);
 
   const handleMaps = async () => {
     if (!location)

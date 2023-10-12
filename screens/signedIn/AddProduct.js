@@ -27,10 +27,6 @@ const AddProduct = ({ route }) => {
   const navigation = useNavigation();
   const { pharmacy } = route.params;
   const { user } = useAppContext();
-  const headers = {
-    Authorization: `Bearer ${user?.token}`,
-    "Content-Type": "multipart/form-data",
-  };
 
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
@@ -50,7 +46,10 @@ const AddProduct = ({ route }) => {
     )
       return showToast("error", "Fields required", "Fill in all the fields.");
 
-    setLoading(true);
+    const headers = {
+      Authorization: `Bearer ${user?.token}`,
+      "Content-Type": "multipart/form-data",
+    };
     const data = new FormData();
     data.append("name", name.trim());
     data.append("description", description.trim());
@@ -58,9 +57,11 @@ const AddProduct = ({ route }) => {
     data.append("image", {
       uri: image,
       name: image.split("/").pop(),
+      type: "image/jpeg",
     });
     data.append("owner", pharmacy._id);
     data.append("category", category);
+    setLoading(true);
     await axios
       .post("/products", data, { headers })
       .then(() => navigation.goBack())
