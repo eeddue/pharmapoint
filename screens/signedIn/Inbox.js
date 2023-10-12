@@ -37,7 +37,6 @@ const Inbox = ({ navigation }) => {
       const { data } = await axios.get("/chats", { headers });
       return data.chats;
     } catch (error) {
-      console.log(error, "chats");
       return [];
     }
   };

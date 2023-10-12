@@ -23,7 +23,7 @@ const Reviews = ({ route }) => {
       await axios
         .get(`/reviews/${pharmacy._id}`)
         .then(({ data }) => setReviews(data.reviews))
-        .catch((error) => console.log(error))
+        .catch((error) => {})
         .finally(() => setLoading(false));
     });
 

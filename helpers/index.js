@@ -13,56 +13,40 @@ export const getGreeting = () => {
 };
 
 export const addProductToStore = async (product) => {
-  try {
-    const products = await getStoredProducts();
-    products.push({ ...product, count: 1 });
-    await AsyncStorage.setItem("products", JSON.stringify(products));
-    return products;
-  } catch (error) {
-    return console.log(error);
-  }
+  const products = await getStoredProducts();
+  products.push({ ...product, count: 1 });
+  await AsyncStorage.setItem("products", JSON.stringify(products));
+  return products;
 };
 
 export const removeProductFromStore = async (productId) => {
-  try {
-    const products = await getStoredProducts();
+  const products = await getStoredProducts();
 
-    const filtered = products.filter((prod) => prod._id !== productId);
-    await AsyncStorage.setItem("products", JSON.stringify(filtered));
-    return filtered;
-  } catch (error) {
-    console.log(error);
-  }
+  const filtered = products.filter((prod) => prod._id !== productId);
+  await AsyncStorage.setItem("products", JSON.stringify(filtered));
+  return filtered;
 };
 
 export const getStoredProducts = async () => {
-  try {
-    const products = await AsyncStorage.getItem("products");
-    return products !== null ? JSON.parse(products) : [];
-  } catch (error) {
-    console.log(error);
-  }
+  const products = await AsyncStorage.getItem("products");
+  return products !== null ? JSON.parse(products) : [];
 };
 
 export const updateProduct = async (type, productId) => {
-  try {
-    let products = await getStoredProducts();
-    let product = products.find((prod) => prod._id === productId);
-    if (type === "add") {
-      product.count += 1;
+  let products = await getStoredProducts();
+  let product = products.find((prod) => prod._id === productId);
+  if (type === "add") {
+    product.count += 1;
+  } else {
+    if (product.count === 1) {
+      products = products.filter((prod) => prod._id !== productId);
     } else {
-      if (product.count === 1) {
-        products = products.filter((prod) => prod._id !== productId);
-      } else {
-        product.count -= 1;
-      }
+      product.count -= 1;
     }
-    await AsyncStorage.setItem("products", JSON.stringify(products));
-
-    return products;
-  } catch (error) {
-    console.log(error);
   }
+  await AsyncStorage.setItem("products", JSON.stringify(products));
+
+  return products;
 };
 
 export const getCurrentLocation = async () => {

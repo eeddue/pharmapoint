@@ -47,7 +47,7 @@ const Onboarding = ({ navigation }) => {
         setLaunched(true);
         navigation.navigate("Bottom");
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   };
 
   const renderItem = ({ item }) => {

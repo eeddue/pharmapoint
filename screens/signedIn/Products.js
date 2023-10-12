@@ -81,8 +81,6 @@ const Products = ({ navigation }) => {
     setFetching(false);
   };
 
-  console.log(currentPage, totalPages);
-
   const handleVisible = () => setVisible((prev) => !prev);
 
   return (

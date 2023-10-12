@@ -43,7 +43,7 @@ const Chat = ({ route }) => {
       await axios
         .get(`/chats/${receiver._id}/messages`, { headers })
         .then(({ data }) => setMessages(formatMessages(data.messages)))
-        .catch((error) => console.log(error))
+        .catch((error) => {})
         .finally(() => setLoading(false));
     })();
   }, []);

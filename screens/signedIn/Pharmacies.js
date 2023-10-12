@@ -49,7 +49,6 @@ const Pharmacies = ({ navigation }) => {
     setSearching(true);
     const { pharmacies, pages } = await searchPharmacies(name);
     setPages(pages);
-    console.log(pages);
     setPharmacies(pharmacies);
     setSearching(false);
   };
