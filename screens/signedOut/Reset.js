@@ -9,17 +9,43 @@ import {
   View,
 } from "react-native";
 import React, { useState } from "react";
+import axios from "axios";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
+import { showToast } from "../../helpers";
 
-const Reset = ({ navigation }) => {
+const Reset = ({ navigation, route }) => {
+  const { email } = route.params;
+
   const [password, setPassword] = useState("");
   const [cPass, setCPass] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handlePress = async () => {
-    navigation.navigate("Login");
+    if (!password || !cPass)
+      return showToast(
+        "error",
+        "Fields required",
+        "All input fields are required."
+      );
+
+    if (password.length < 6)
+      return showToast(
+        "error",
+        "Invalid password",
+        "Password must be 6 or more characters."
+      );
+
+    setLoading(true);
+    try {
+      await axios.post("/auth/reset-password", { email, password });
+      navigation.replace("Login");
+    } catch (error) {
+      showToast("error", "Error", error.response.data.msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,22 +62,24 @@ const Reset = ({ navigation }) => {
         <View style={{ marginTop: 15 }}>
           <Text style={styles.label}>Password</Text>
           <TextInput
+            secureTextEntry
             editable={!loading}
             placeholder="Password"
             style={styles.input}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => setPassword(value.trim())}
           />
         </View>
 
         <View style={{ marginTop: 15 }}>
           <Text style={styles.label}>Confirm Password</Text>
           <TextInput
+            secureTextEntry
             editable={!loading}
             placeholder="Confirm Password"
             style={styles.input}
             value={cPass}
-            onChangeText={setCPass}
+            onChangeText={(value) => setCPass(value.trim())}
           />
         </View>
 

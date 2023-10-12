@@ -1,5 +1,3 @@
-import { StyleSheet } from "react-native";
-import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   Login,
@@ -9,7 +7,6 @@ import {
   Onboarding,
   Verify,
 } from "../screens/signedOut";
-import UserHomeNavigation from "./UserHomeNavigation";
 import {
   Chat,
   Pharmacies,
@@ -25,6 +22,7 @@ import {
   Payment,
   PharmacyDetails,
 } from "../screens/signedIn";
+import UserHomeNavigation from "./UserHomeNavigation";
 import { useAppContext } from "../context/AppContext";
 import AddProduct from "../screens/signedIn/AddProduct";
 import LocationRequest from "../components/LocationRequest";
@@ -67,5 +65,3 @@ const AppNavigation = () => {
 };
 
 export default AppNavigation;
-
-const styles = StyleSheet.create({});

@@ -28,12 +28,14 @@ const Product = ({ route, navigation }) => {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [visible, setVisible] = useState(false);
-  const isMine = user?._id === product.user;
+  const isMine = user?.pharmacies.includes(product.owner._id);
 
   const handleCart = async () => {
     setLoading(true);
     if (isInStore) {
-      await removeProductFromStore(product._id).then((res) => setCartItems(res));
+      await removeProductFromStore(product._id).then((res) =>
+        setCartItems(res)
+      );
     } else {
       await addProductToStore(product).then((res) => setCartItems(res));
     }
@@ -58,11 +60,7 @@ const Product = ({ route, navigation }) => {
     <View style={{ flex: 1, backgroundColor: COLORS.white }}>
       {/* header */}
       <View style={styles.header}>
-        <Pressable
-          disabled={loading}
-          onPress={() => navigation.goBack()}
-          style={styles.goback}
-        >
+        <Pressable onPress={() => navigation.goBack()} style={styles.goback}>
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
 
@@ -73,20 +71,16 @@ const Product = ({ route, navigation }) => {
           onPress={handleCart}
           style={styles.goback}
         >
-          {loading ? (
-            <ActivityIndicator size={25} color={COLORS.red} />
-          ) : (
-            <Image
-              source={isInStore ? CartFillIcon : CartIcon}
-              tintColor={isInStore ? COLORS.red : COLORS.ltblack}
-              style={{ width: 25, height: 25 }}
-            />
-          )}
+          <Image
+            source={isInStore ? CartFillIcon : CartIcon}
+            tintColor={isInStore ? COLORS.red : COLORS.ltblack}
+            style={{ width: 25, height: 25 }}
+          />
         </Pressable>
       </View>
 
       {/* product details */}
-      <ScrollView bounces={false}>
+      <ScrollView bounces={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <View style={styles.imageView}>
           <Image
             source={{ uri: product.img.url }}
@@ -98,7 +92,7 @@ const Product = ({ route, navigation }) => {
         </View>
         <View style={{ padding: 10 }}>
           <Text style={styles.name}>{product.name}</Text>
-          <Text style={styles.category}>{product.category.name}</Text>
+          <Text style={styles.category}>{product.category}</Text>
           <Text style={styles.desc}>{product.description}</Text>
           <Text style={styles.price}>Ksh {parseInt(product.price)}</Text>
         </View>
@@ -125,7 +119,7 @@ const Product = ({ route, navigation }) => {
         visible={visible}
         setVisible={setVisible}
         loading={deleting}
-        text={` Are you sure you want to delete ${product.name} from it's respective pharmacy?`}
+        text={`Are you sure you want to delete ${product.name} from it's respective pharmacy?`}
         handleAction={handleDelete}
         title="Delete product"
       />

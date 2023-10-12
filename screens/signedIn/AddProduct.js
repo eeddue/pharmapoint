@@ -64,7 +64,7 @@ const AddProduct = ({ route }) => {
     await axios
       .post("/products", data, { headers })
       .then(() => navigation.goBack())
-      .catch((error) => console.log(error.response.data.msg))
+      .catch((error) => showToast("error", "Error", error.response.data.msg))
       .finally(() => setLoading(false));
   };
 

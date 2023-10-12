@@ -35,7 +35,7 @@ const Pharmacy = ({ route, navigation }) => {
   const [rating, setRating] = useState(1);
   const [review, setReview] = useState("");
 
-  const isMine = user?._id === pharmacy.owner;
+  const isMine = user?._id === pharmacy.owner._id;
 
   const handleMaps = async () => {
     if (!location)
@@ -55,12 +55,8 @@ const Pharmacy = ({ route, navigation }) => {
   };
 
   const goToChat = () => {
-    const receiver = {
-      name: pharmacy.name,
-      _id: pharmacy.owner,
-    };
     user
-      ? navigation.navigate("Chat", { receiver })
+      ? navigation.navigate("Chat", { receiver: pharmacy.owner })
       : navigation.navigate("Login");
   };
 

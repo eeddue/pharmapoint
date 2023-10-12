@@ -5,11 +5,13 @@ import {
   Text,
   View,
 } from "react-native";
-import React, { useEffect, useState } from "react";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+
 import { COLORS, FONTS } from "../../constants";
 import ProductItem from "../../components/ProductItem";
+import { showToast } from "../../helpers";
 
 const PharmacyProducts = ({ route }) => {
   const { pharmacy } = route.params;
@@ -23,11 +25,11 @@ const PharmacyProducts = ({ route }) => {
       await axios
         .get(`/products/${pharmacy._id}`)
         .then(({ data }) => setProducts(data.products))
-        .catch((error) => console.log(error))
+        .catch((error) => showToast("error", "Sorry", error))
         .finally(() => setLoading(false));
     });
 
-    return () => unsub;
+    return unsub;
   }, []);
 
   return (

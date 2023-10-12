@@ -1,24 +1,15 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import moment from "moment";
 
 import { COLORS, FONTS } from "../constants";
 import { useAppContext } from "../context/AppContext";
 import { AvatarIcon } from "../constants/icons";
+import { getFormattedDate } from "../helpers";
 
 const ChatItem = ({ chat }) => {
   const navigation = useNavigation();
   const { user } = useAppContext();
-  const receiver =
-    chat.users?.sender._id === user._id
-      ? {
-          name: chat.users?.receiver.username,
-          _id: chat.users?.receiver._id,
-        }
-      : {
-          name: chat.users?.sender.username,
-          _id: chat.users?.sender._id,
-        };
+  const receiver = chat?.users.find((us) => us._id !== user._id);
 
   return (
     <TouchableOpacity
@@ -32,12 +23,12 @@ const ChatItem = ({ chat }) => {
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.name} numberOfLines={1}>
-            {receiver.name}
+            {receiver.username}
           </Text>
-          <Text style={styles.time}>{moment(chat.updatedAt).fromNow()}</Text>
+          <Text style={styles.time}>{getFormattedDate(chat.updatedAt)}</Text>
         </View>
         <Text style={styles.message} numberOfLines={1}>
-          {chat.messages?.pop()?.message}
+          {chat.lastMessage?.message}
         </Text>
       </View>
     </TouchableOpacity>

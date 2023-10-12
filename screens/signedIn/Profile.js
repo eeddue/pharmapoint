@@ -10,13 +10,12 @@ import { useState } from "react";
 import * as Icons from "@expo/vector-icons";
 import { COLORS, FONTS } from "../../constants";
 import { AvatarIcon } from "../../constants/icons";
-import { pickImage } from "../../helpers";
 import { more } from "../../data";
 import { useAppContext } from "../../context/AppContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AccessDenied from "../../components/AccessDenied";
 import { useNavigation } from "@react-navigation/native";
-import socket from "../../context/socket";
+import { showToast } from "../../helpers";
 
 const renderMore = (role) => {
   const navigation = useNavigation();
@@ -41,12 +40,17 @@ const renderMore = (role) => {
 
 const Profile = () => {
   const { user, setUser } = useAppContext();
-  const [image, setImage] = useState(null);
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("user")
       .then(() => setUser(null))
-      .catch(() => alert("There was an error logging out. Please try again."));
+      .catch(() =>
+        showToast(
+          "error",
+          "Sorry",
+          "There was an error logging out. Please try again."
+        )
+      );
   };
 
   if (!user) return <AccessDenied />;
@@ -59,16 +63,6 @@ const Profile = () => {
       >
         <View style={styles.avatarView}>
           <Image style={styles.avatar} source={AvatarIcon} />
-
-          {/* <TouchableOpacity
-            activeOpacity={0.5}
-            style={styles.edit}
-            onPress={() => {
-              pickImage().then((url) => setImage(url));
-            }}
-          >
-            <Icons.Feather name="edit-2" size={15} color={COLORS.white} />
-          </TouchableOpacity> */}
         </View>
         <View style={styles.view}>
           <Text style={styles.label}>Username</Text>
@@ -118,19 +112,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatar: { height: 60, width: 60, tintColor: COLORS.ltblack },
-  edit: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.red,
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    borderWidth: 3,
-    borderColor: COLORS.white,
-  },
   view: { padding: 10, borderTopColor: COLORS.gray, borderTopWidth: 1 },
   label: {
     ...FONTS.Regular,

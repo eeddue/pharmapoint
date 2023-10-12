@@ -14,24 +14,25 @@ import ChatItem from "../../components/ChatItem";
 import { useAppContext } from "../../context/AppContext";
 import AccessDenied from "../../components/AccessDenied";
 
-const Inbox = () => {
+const Inbox = ({ navigation }) => {
   const [fetching, setFetching] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const { user, chats, setChats } = useAppContext();
 
-  const headers = { Authorization: `Bearer ${user?.token}` };
-
   useEffect(() => {
-    if (!user) return;
-    (async () => {
+    const unsub = navigation.addListener("focus", async () => {
       const response = await getChats();
       setChats(response);
       setFetching(false);
-    })();
-  }, [user]);
+    });
+
+    return unsub;
+  }, [navigation]);
 
   const getChats = async () => {
+    if (!user) return;
+    const headers = { Authorization: `Bearer ${user.token}` };
     try {
       const { data } = await axios.get("/chats", { headers });
       return data.chats;

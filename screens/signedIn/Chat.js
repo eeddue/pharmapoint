@@ -24,11 +24,11 @@ import { useNavigation } from "@react-navigation/native";
 import socket from "../../context/socket";
 import ActionsModal from "../../components/ActionsModal";
 import { AvatarIcon } from "../../constants/icons";
-import { showToast } from "../../helpers";
+import { formatMessages, showToast } from "../../helpers";
 
 const Chat = ({ route }) => {
   const { receiver } = route.params;
-  const { user, onlineUsers, handleChats, onChatDeleted } = useAppContext();
+  const { user } = useAppContext();
   const navigation = useNavigation();
 
   const [messages, setMessages] = useState([]);
@@ -38,25 +38,11 @@ const Chat = ({ route }) => {
 
   const headers = { Authorization: `Bearer ${user.token}` };
 
-  const handleMessages = (msgs) =>
-    msgs
-      .map((msg) => {
-        return {
-          _id: msg._id,
-          text: msg.message,
-          createdAt: msg.createdAt,
-          user: {
-            _id: msg.sender,
-          },
-        };
-      })
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
   useEffect(() => {
     (async () => {
       await axios
-        .get(`/chats/${receiver._id}`, { headers })
-        .then(({ data }) => setMessages(handleMessages(data.messages)))
+        .get(`/chats/${receiver._id}/messages`, { headers })
+        .then(({ data }) => setMessages(formatMessages(data.messages)))
         .catch((error) => console.log(error))
         .finally(() => setLoading(false));
     })();
@@ -64,6 +50,7 @@ const Chat = ({ route }) => {
 
   useEffect(() => {
     socket.on("receive_message", (msg) => {
+      if (msg.sender !== receiver._id) return;
       const newMessage = {
         _id: msg._id,
         text: msg.message,
@@ -72,7 +59,6 @@ const Chat = ({ route }) => {
           _id: msg.sender,
         },
       };
-      handleChats({ receiver: receiver._id, message: msg });
       setMessages((previousMessages) =>
         GiftedChat.append(previousMessages, newMessage)
       );
@@ -92,8 +78,6 @@ const Chat = ({ route }) => {
       )
       .then(({ data }) => {
         socket.emit("send_message", data.message);
-        handleChats({ receiver: receiver._id, message: data.message });
-
         setMessages((previousMessages) =>
           GiftedChat.append(previousMessages, messages)
         );
@@ -106,7 +90,6 @@ const Chat = ({ route }) => {
     await axios
       .delete(`/chats/${receiver._id}`, { headers })
       .then(() => {
-        onChatDeleted(receiver._id);
         setVisible((prev) => !prev);
         navigation.goBack();
       })
@@ -115,7 +98,6 @@ const Chat = ({ route }) => {
   };
 
   const renderHeader = () => {
-    const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
     return (
       <View style={styles.header}>
         <Pressable disabled={deleting} onPress={() => navigation.goBack()}>
@@ -126,15 +108,7 @@ const Chat = ({ route }) => {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>
-            {receiver.name}
-          </Text>
-          <Text
-            style={[
-              styles.status,
-              { color: isOnline ? COLORS.green : COLORS.red },
-            ]}
-          >
-            {isOnline ? "Online" : "Offline"}
+            {receiver.username}
           </Text>
         </View>
         {messages.length ? (
@@ -154,15 +128,13 @@ const Chat = ({ route }) => {
   const renderInputToolbar = (props) => {
     return (
       <View style={styles.footer}>
-        <TouchableOpacity disabled={deleting}>
-          <Icons.Feather name="plus" size={30} color={COLORS.red} />
-        </TouchableOpacity>
         <TextInput
           style={styles.input}
           placeholder="Type a message..."
           value={props.text}
           onChangeText={props.onTextChanged}
           editable={!deleting}
+          autoFocus
         />
 
         <Send {...props} disabled={!props.text.trim().length}>
@@ -290,7 +262,7 @@ const styles = StyleSheet.create({
     height: "100%",
     padding: 10,
     borderRadius: 5,
-    marginHorizontal: 10,
+    marginRight: 10,
     color: COLORS.ltblack,
   },
   empty: {

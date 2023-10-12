@@ -22,7 +22,7 @@ const Cart = ({ navigation }) => {
       setFetching(false);
     });
 
-    return () => unsub;
+    return unsub;
   }, []);
 
   return (

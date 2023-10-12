@@ -11,17 +11,15 @@ import {
 import React, { useEffect, useState } from "react";
 import { Image } from "react-native";
 import { TextInput } from "react-native";
-import axios from "axios";
 
 import { COLORS, FONTS } from "../../constants";
 import { SearchIcon } from "../../constants/icons";
-import { getGreeting, getStoredProducts } from "../../helpers";
+import { getGreeting } from "../../helpers";
 import PharmacyItem from "../../components/PharmacyItem";
-import { useAppContext } from "../../context/AppContext";
 import ProductItem from "../../components/ProductItem";
+import { getHomeItems } from "../../api";
 
 const Home = ({ navigation }) => {
-  const { setCartItems } = useAppContext();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,32 +27,18 @@ const Home = ({ navigation }) => {
   const [pharmacies, setPharmacies] = useState([]);
 
   useEffect(() => {
-    (async () => {
-      const products = await getStoredProducts();
-      setCartItems(products);
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
+    const unsub = navigation.addListener("focus", async () => {
       const { pharmacies, products } = await getHomeItems();
       setPharmacies(pharmacies);
       setProducts(products);
       setLoading(false);
-    })();
+    });
+
+    return unsub;
   }, []);
 
-  const getHomeItems = async () => {
-    try {
-      const { data } = await axios.get("/pharmacies/home");
-      return { pharmacies: data.pharmacies, products: data.products };
-    } catch (error) {
-      console.log(error);
-      return [[], []];
-    }
-  };
-
   const onRefresh = async () => {
+    setRefreshing(true);
     const { pharmacies, products } = await getHomeItems();
     setPharmacies(pharmacies);
     setProducts(products);
@@ -71,7 +55,7 @@ const Home = ({ navigation }) => {
       {/* header to search */}
       <View style={styles.header}>
         <TextInput
-          placeholder="Search for medicine..."
+          placeholder="Search for products..."
           style={styles.input}
           value={name}
           onChangeText={setName}

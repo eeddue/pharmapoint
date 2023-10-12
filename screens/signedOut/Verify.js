@@ -9,16 +9,35 @@ import {
   View,
 } from "react-native";
 import React, { useState } from "react";
+import axios from "axios";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
+import { showToast } from "../../helpers";
 
-const Verify = ({ navigation }) => {
+const Verify = ({ navigation, route }) => {
+  const { email } = route.params;
+
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handlePress = async () => {
-    navigation.navigate("Reset");
+    if (!code)
+      return showToast(
+        "error",
+        "Field required",
+        "Code is required to continue"
+      );
+
+    setLoading(true);
+    try {
+      await axios.post("/auth/verify", { email, code: parseInt(code) });
+      navigation.navigate("Reset", { email });
+    } catch (error) {
+      showToast("error", "Error", error.response.data.msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,7 +49,7 @@ const Verify = ({ navigation }) => {
         <Text style={styles.bigText}>Verify code</Text>
         <Text style={styles.desc}>
           Enter the password reset code we sent to your email. The code will
-          expire in 30 minutes.
+          expire in 30 minutes. If you don't see it, check it in your spam.
         </Text>
 
         <View style={{ marginTop: 15 }}>
@@ -41,7 +60,7 @@ const Verify = ({ navigation }) => {
             style={styles.input}
             keyboardType="numeric"
             value={code}
-            onChangeText={setCode}
+            onChangeText={(value) => setCode(value.trim())}
           />
         </View>
 

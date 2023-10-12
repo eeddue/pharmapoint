@@ -6,54 +6,63 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  RefreshControl,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import * as Icons from "@expo/vector-icons";
-import axios from "axios";
 
 import { COLORS, FONTS } from "../../constants";
 import PharmacyItem from "../../components/PharmacyItem";
+import LoadingMore from "../../components/LoadingMore";
+import ListEmptyComponent from "../../components/ListEmptyComponent";
+import RefreshComponent from "../../components/RefreshComponent";
+import { getPharmacies, searchPharmacies } from "../../api";
 
 const Pharmacies = ({ navigation }) => {
   const [pharmacies, setPharmacies] = useState([]);
+  const [name, setName] = useState("");
+  const [pages, setPages] = useState(0);
+  const [skip, setSkip] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
-  const [name, setName] = useState("");
+  const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const response = await getPharmacies();
-      setPharmacies(response);
+      const { pharmacies, pages } = await getPharmacies(skip);
+      setPharmacies(pharmacies);
+      setPages(pages);
       setLoading(false);
     })();
   }, []);
 
-  const getPharmacies = async () => {
-    try {
-      const { data } = await axios.get("/pharmacies");
-      return data.pharmacies;
-    } catch (error) {
-      console.log(error, "pharmacies");
-      return [];
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
-    const response = await getPharmacies();
-    setPharmacies(response);
+    const { pharmacies, pages } = await getPharmacies(skip);
+    setPharmacies(pharmacies);
+    setPages(pages);
     setRefreshing(false);
   };
 
   const searchProducts = async () => {
     setSearching(true);
-    await axios
-      .get(`/pharmacies?name=${name.trim()}`)
-      .then(({ data }) => setPharmacies(data.pharmacies))
-      .catch((error) => console.log(error))
-      .finally(() => setSearching(false));
+    const { pharmacies, pages } = await searchPharmacies(name);
+    setPages(pages);
+    console.log(pages);
+    setPharmacies(pharmacies);
+    setSearching(false);
+  };
+
+  const loadMore = async () => {
+    if (currentPage === pages || pages === 0) return;
+    setSkip(currentPage * 20);
+    setCurrentPage((prev) => prev + 1);
+    setFetching(true);
+    const { pharmacies: more } = await getPharmacies(skip);
+    setPharmacies(pharmacies.concat(more));
+    setFetching(false);
   };
 
   return (
@@ -64,7 +73,7 @@ const Pharmacies = ({ navigation }) => {
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
         <TextInput
-          placeholder="Search"
+          placeholder="Search for pharmacies..."
           style={styles.input}
           value={name}
           onChangeText={setName}
@@ -87,33 +96,23 @@ const Pharmacies = ({ navigation }) => {
       </View>
 
       {/* pharmacies */}
-      {loading ? (
-        <ActivityIndicator
-          size={30}
-          color={COLORS.red}
-          style={{ marginTop: 30 }}
-        />
-      ) : (
-        <FlatList
-          data={pharmacies}
-          keyExtractor={(phar) => phar._id}
-          renderItem={({ item, index }) => (
-            <PharmacyItem index={index} pharmacy={item} />
-          )}
-          ListEmptyComponent={() => (
-            <Text style={styles.empty}>No nearby pharmacies.</Text>
-          )}
-          contentContainerStyle={{ padding: 10 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={[COLORS.red]}
-              tintColor={COLORS.red}
-            />
-          }
-        />
-      )}
+
+      <FlatList
+        data={pharmacies}
+        keyExtractor={(phar) => phar._id}
+        contentContainerStyle={{ padding: 10 }}
+        renderItem={({ item, index }) => (
+          <PharmacyItem index={index} pharmacy={item} />
+        )}
+        ListEmptyComponent={
+          <ListEmptyComponent loading={loading} text="No nearby pharmacies." />
+        }
+        ListFooterComponent={fetching || loading ? LoadingMore : null}
+        onEndReached={loadMore}
+        refreshControl={
+          <RefreshComponent refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </View>
   );
 };

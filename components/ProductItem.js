@@ -25,11 +25,7 @@ const ProductItem = ({ product, index }) => {
     >
       <View style={styles.avatarView}>
         <Image
-          source={{
-            uri:
-              product.img.url ||
-              "https://api.time.com/wp-content/uploads/2021/06/Pills.jpg?quality=85&w=2703",
-          }}
+          source={{ uri: product.img.url }}
           style={styles.image}
           placeholder={blurhash}
           transition={500}

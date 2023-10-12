@@ -25,8 +25,17 @@ const Register = ({ navigation }) => {
 
   const handlePress = async () => {
     if (!email || !password || !username || !cPass)
-      return alert("All fields are required.");
-    if (password !== cPass) return alert("Passwords must be the same.");
+      return showToast("error", "Fields required", "All fields are required.");
+
+    if (password !== cPass)
+      return showToast("error", "Warning", "Passwords must be the same.");
+
+    if (password.length < 6)
+      return showToast(
+        "error",
+        "Short password",
+        "Password must be 6 or more characters."
+      );
 
     setLoading(true);
     await axios
@@ -36,14 +45,19 @@ const Register = ({ navigation }) => {
         password,
         role: selected,
       })
-      .then(() => navigation.navigate("Login"))
+      .then(({ data }) => {
+        showToast("success", "Congratulations", data.msg);
+        navigation.navigate("Login");
+      })
       .catch((error) => showToast("error", "Sorry", error.response.data.msg))
       .finally(() => setLoading(false));
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: COLORS.white, padding: 10 }}>
-      <KeyboardWrapper>
+    <KeyboardWrapper>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: COLORS.white, padding: 10 }}
+      >
         <Text style={styles.bigText}>Create an account.</Text>
 
         <View style={{ marginTop: 15 }}>
@@ -164,8 +178,8 @@ const Register = ({ navigation }) => {
             <Text style={styles.link}>Login</Text>
           </Pressable>
         </View>
-      </KeyboardWrapper>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardWrapper>
   );
 };
 

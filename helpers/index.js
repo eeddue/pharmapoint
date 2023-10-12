@@ -128,3 +128,43 @@ export const getWorkingHours = (openingTime, closingTime) => {
     moment(closingTime).format("h:mm A")
   );
 };
+
+export const updateLocalUser = async (type, pharmacyId) => {
+  const response = await AsyncStorage.getItem("user");
+  const user = await JSON.parse(response);
+  let newUser = null;
+
+  if (type === "delete") {
+    newUser = {
+      ...user,
+      pharmacies: user.pharmacies.filter((p) => p !== pharmacyId),
+    };
+    await AsyncStorage.setItem("user", JSON.stringify(newUser));
+  } else {
+    newUser = {
+      ...user,
+      pharmacies: [...user.pharmacies, pharmacyId],
+    };
+    await AsyncStorage.setItem("user", JSON.stringify(newUser));
+  }
+  return newUser;
+};
+
+export const formatMessages = (msgs) => {
+  return msgs.map((msg) => {
+    return {
+      _id: msg._id,
+      text: msg.message,
+      createdAt: msg.createdAt,
+      user: {
+        _id: msg.sender,
+      },
+    };
+  });
+};
+
+export const getFormattedDate = (date) => {
+  const today = new Date().getDate();
+  if (new Date(date).getDate() === today) return moment(date).format("h:mm A");
+  return moment(date).fromNow();
+};

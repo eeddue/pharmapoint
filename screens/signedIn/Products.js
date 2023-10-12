@@ -6,7 +6,6 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  RefreshControl,
   Keyboard,
   Modal,
   TouchableOpacity,
@@ -18,62 +17,72 @@ import axios from "axios";
 import { COLORS, FONTS, SHADOW } from "../../constants";
 import { categories } from "../../data";
 import ProductItem from "../../components/ProductItem";
+import LoadingMore from "../../components/LoadingMore";
+import ListEmptyComponent from "../../components/ListEmptyComponent";
+import RefreshComponent from "../../components/RefreshComponent";
+import { getProducts, searchProducts } from "../../api";
 
 const Products = ({ navigation }) => {
   const [products, setProducts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [searching, setSearching] = useState(false);
   const [name, setName] = useState("");
   const [visible, setVisible] = useState(false);
   const [category, setCategory] = useState("");
+  const [totalPages, setTotalPages] = useState(0);
+  const [skip, setSkip] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const response = await getProducts();
-      setProducts(response);
+      setLoading(true);
+      const { products, pages } = await getProducts(skip, category);
+      setTotalPages(pages);
+      setProducts(products);
       setLoading(false);
     })();
-  }, []);
-
-  useEffect(() => {
-    if (products.length && name) {
-      setFiltered(
-        products.filter((prod) =>
-          prod.name.toLowerCase().includes(name.toLowerCase())
-        )
-      );
-    }
-  }, [name]);
-
-  const getProducts = async () => {
-    try {
-      const { data } = await axios.get("/products");
-      return data.products;
-    } catch (error) {
-      console.log(error, "Products");
-      return [];
-    }
-  };
+  }, [category]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    const response = await getProducts();
-    setProducts(response);
+    setSkip(0);
+    const { products, pages } = await getProducts(skip, "");
+    setProducts(products);
+    setTotalPages(pages);
     setRefreshing(false);
   };
 
-  const searchProducts = async () => {
+  const onSearch = async () => {
     Keyboard.dismiss();
     if (!name.trim().length) return;
     setSearching(true);
-    await axios
-      .get(`/products?name=${name.trim()}`)
-      .then(({ data }) => setProducts(data.products))
-      .catch((error) => console.log(error))
-      .finally(() => setSearching(false));
+    const { products, pages } = await searchProducts(name);
+    setProducts(products);
+    setTotalPages(pages);
+    setSearching(false);
   };
+
+  const loadMore = async () => {
+    if (currentPage === totalPages || totalPages === 0) return;
+    setFetching(true);
+
+    setSkip(currentPage * 20);
+    setCurrentPage((prev) => prev + 1);
+
+    const { products: response, pages } = await getProducts(skip);
+
+    setTotalPages(pages);
+    if (response.length) {
+      setProducts(products.concat(response));
+    }
+
+    setFetching(false);
+  };
+
+  console.log(currentPage, totalPages);
 
   const handleVisible = () => setVisible((prev) => !prev);
 
@@ -84,7 +93,7 @@ const Products = ({ navigation }) => {
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
         <TextInput
-          placeholder="Search product..."
+          placeholder="Search for products..."
           style={styles.input}
           value={name}
           onChangeText={setName}
@@ -99,7 +108,7 @@ const Products = ({ navigation }) => {
           </Pressable>
           <Pressable
             style={styles.search}
-            onPress={searchProducts}
+            onPress={onSearch}
             disabled={searching || loading || refreshing}
           >
             {searching ? (
@@ -115,35 +124,24 @@ const Products = ({ navigation }) => {
         </View>
       </View>
 
-      {loading ? (
-        <ActivityIndicator
-          size={25}
-          color={COLORS.red}
-          style={{ marginTop: 30 }}
-        />
-      ) : (
-        <FlatList
-          data={name.trim().length ? filtered : products}
-          keyExtractor={(_, index) => index}
-          renderItem={({ item, index }) => (
-            <ProductItem index={index} product={item} />
-          )}
-          ListEmptyComponent={() => (
-            <Text style={styles.empty}>No products found.</Text>
-          )}
-          numColumns={2}
-          gap={10}
-          contentContainerStyle={{ padding: 10 }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={COLORS.red}
-              colors={[COLORS.red]}
-            />
-          }
-        />
-      )}
+      <FlatList
+        data={products}
+        keyExtractor={(_, index) => index}
+        renderItem={({ item, index }) => (
+          <ProductItem index={index} product={item} />
+        )}
+        ListEmptyComponent={
+          <ListEmptyComponent loading={loading} text="No products found." />
+        }
+        numColumns={2}
+        gap={10}
+        contentContainerStyle={{ padding: 10 }}
+        ListFooterComponent={fetching || loading ? LoadingMore : null}
+        onEndReached={loadMore}
+        refreshControl={
+          <RefreshComponent refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
 
       <Modal visible={visible} transparent animationType="slide">
         <View style={{ flex: 1 }}>
@@ -225,12 +223,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     color: COLORS.ltblack,
   },
-  empty: {
-    ...FONTS.Regular,
-    textAlign: "center",
-    color: COLORS.ltblack,
-    marginTop: 30,
-  },
+
   search: {
     borderColor: COLORS.gray,
     borderWidth: 1,

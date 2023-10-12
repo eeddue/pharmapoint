@@ -12,11 +12,12 @@ import axios from "axios";
 import { COLORS, FONTS } from "../../constants";
 import ActionsModal from "../../components/ActionsModal";
 import { useAppContext } from "../../context/AppContext";
-import { showToast } from "../../helpers";
+import { showToast, updateLocalUser } from "../../helpers";
 
 const PharmacyDetails = ({ route, navigation }) => {
   const { pharmacy } = route.params;
-  const { user } = useAppContext();
+  const { user, setUser } = useAppContext();
+
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -26,7 +27,9 @@ const PharmacyDetails = ({ route, navigation }) => {
       .delete(`/pharmacies/${pharmacy._id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       })
-      .then(() => {
+      .then(async () => {
+        const newUser = await updateLocalUser("delete", pharmacy._id);
+        setUser(newUser);
         setVisible(false);
         navigation.popToTop();
       })

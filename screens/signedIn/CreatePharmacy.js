@@ -18,13 +18,13 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useNavigation } from "@react-navigation/native";
 
 import { COLORS, FONTS } from "../../constants";
-import { getCurrentLocation, showToast } from "../../helpers";
+import { getCurrentLocation, showToast, updateLocalUser } from "../../helpers";
 import { useAppContext } from "../../context/AppContext";
 
 const CreatePharmacy = ({ route }) => {
   const { pharmacy } = route.params;
   const navigation = useNavigation();
-  const { user } = useAppContext();
+  const { user, setUser } = useAppContext();
 
   const [visible, setVisible] = useState(false);
   const [openingTime, setOpeningTime] = useState(
@@ -45,7 +45,7 @@ const CreatePharmacy = ({ route }) => {
     setGetting(true);
     await getCurrentLocation()
       .then((loc) => setLocation(loc))
-      .catch((err) => console.log(err))
+      .catch((err) => showToast("error", "Error", err))
       .finally(() => setGetting(false));
   };
 
@@ -71,13 +71,17 @@ const CreatePharmacy = ({ route }) => {
     if (pharmacy) {
       await axios
         .patch(`/pharmacies/${pharmacy._id}`, data, { headers })
-        .then(() => navigation.goBack())
+        .then(async () => navigation.goBack())
         .catch((error) => showToast("error", "Sorry", error.response.data.msg))
         .finally(() => setLoading(false));
     } else {
       await axios
         .post("/pharmacies", data, { headers })
-        .then(() => navigation.goBack())
+        .then(async ({ data }) => {
+          const newUser = await updateLocalUser("add", data.pharmacy._id);
+          setUser(newUser);
+          navigation.goBack();
+        })
         .catch((error) => showToast("error", "Sorry", error.response.data.msg))
         .finally(() => setLoading(false));
     }

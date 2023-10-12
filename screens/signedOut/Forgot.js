@@ -10,16 +10,29 @@ import {
   View,
 } from "react-native";
 import React, { useState } from "react";
+import axios from "axios";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
+import { showToast } from "../../helpers";
 
 const Forgot = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handlePress = async () => {
-    navigation.navigate("Verify");
+    if (!email)
+      return showToast("error", "Field required", "Email is required.");
+
+    setLoading(true);
+    try {
+      await axios.post("/auth/forgot", { email });
+      navigation.navigate("Verify", { email });
+    } catch (error) {
+      showToast("error", "Error", error.response.data.msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,7 +56,7 @@ const Forgot = ({ navigation }) => {
             style={styles.input}
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => setEmail(value.toLowerCase().trim())}
           />
         </View>
 

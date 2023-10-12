@@ -3,7 +3,7 @@ import { Platform, SafeAreaView, StatusBar, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import socket from "./socket";
-import { getCurrentLocation } from "../helpers";
+import { getCurrentLocation, getStoredProducts } from "../helpers";
 // import LocationRequest from "../components/LocationRequest";
 
 const AppContext = createContext({});
@@ -15,7 +15,6 @@ export default function AppContextProvider({ children }) {
   const [launched, setLaunched] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState([]);
   const [chats, setChats] = useState([]);
 
   useEffect(() => {
@@ -36,22 +35,21 @@ export default function AppContextProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (user !== null) {
+    (async () => {
+      const products = await getStoredProducts();
+      setCartItems(products);
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
       socket.emit("add_user", user._id);
     }
   }, [user]);
 
-  useEffect(() => {
-    socket.on("online_users", (users) => setOnlineUsers(users));
-
-    return () => {
-      socket.off("online_users");
-    };
-  }, [socket]);
-
   const handleChats = (data) => {
     const updatedChats = chats.map((chat) => {
-      if (chat.users.receiver._id === data.receiver) {
+      if (chat.users.find((us) => us._id === data.receiver._id)) {
         return {
           ...chat,
           messages: [chat.messages, data.message],
@@ -60,12 +58,6 @@ export default function AppContextProvider({ children }) {
       return chat;
     });
     setChats(updatedChats);
-  };
-
-  const onChatDeleted = (receiverId) => {
-    return setChats((prev) =>
-      prev.filter((chat) => chat.users.receiver._id !== receiverId)
-    );
   };
 
   return (
@@ -79,11 +71,9 @@ export default function AppContextProvider({ children }) {
         launched,
         location,
         setLocation,
-        onlineUsers,
         chats,
         setChats,
         handleChats,
-        onChatDeleted,
       }}
     >
       {Platform.OS === "android" ? (
