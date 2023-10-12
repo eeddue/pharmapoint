@@ -10,11 +10,12 @@ const ChatItem = ({ chat }) => {
   const navigation = useNavigation();
   const { user } = useAppContext();
   const receiver = chat?.users.find((us) => us._id !== user._id);
+  const members = chat.users.map((member) => member._id);
 
   return (
     <TouchableOpacity
       activeOpacity={0.5}
-      onPress={() => navigation.navigate("Chat", { receiver })}
+      onPress={() => navigation.navigate("Chat", { receiver, members })}
       style={styles.item}
     >
       <View style={styles.imageView}>

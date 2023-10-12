@@ -27,8 +27,8 @@ import { AvatarIcon } from "../../constants/icons";
 import { formatMessages, showToast } from "../../helpers";
 
 const Chat = ({ route }) => {
-  const { receiver } = route.params;
-  const { user } = useAppContext();
+  const { receiver, members } = route.params;
+  const { user, onlineUsers } = useAppContext();
   const navigation = useNavigation();
 
   const [messages, setMessages] = useState([]);
@@ -50,7 +50,7 @@ const Chat = ({ route }) => {
 
   useEffect(() => {
     socket.on("receive_message", (msg) => {
-      if (msg.sender !== receiver._id) return;
+      if (!members.includes(msg.sender)) return;
       const newMessage = {
         _id: msg._id,
         text: msg.message,
@@ -97,6 +97,8 @@ const Chat = ({ route }) => {
       .finally(() => setDeleting(false));
   };
 
+  const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
+
   const renderHeader = () => {
     return (
       <View style={styles.header}>
@@ -109,6 +111,15 @@ const Chat = ({ route }) => {
         <View style={{ flex: 1 }}>
           <Text style={styles.name} numberOfLines={1}>
             {receiver.username}
+          </Text>
+          <Text
+            style={[
+              styles.status,
+              { color: isOnline ? COLORS.green : COLORS.red },
+            ]}
+            numberOfLines={1}
+          >
+            {isOnline ? "Online" : "Offline"}
           </Text>
         </View>
         {messages.length ? (

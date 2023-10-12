@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import socket from "./socket";
 import { getCurrentLocation, getStoredProducts } from "../helpers";
+import { AppState } from "react-native";
 // import LocationRequest from "../components/LocationRequest";
 
 const AppContext = createContext({});
@@ -16,16 +17,15 @@ export default function AppContextProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState(null);
   const [chats, setChats] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [user, launched, location] = await Promise.all([
+      const [user, launched] = await Promise.all([
         AsyncStorage.getItem("user"),
         AsyncStorage.getItem("launched"),
-        getCurrentLocation(),
       ]);
 
-      setLocation(location);
       setLaunched(launched);
       if (user) {
         setUser(JSON.parse(user));
@@ -42,10 +42,30 @@ export default function AppContextProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user && location) {
       socket.emit("add_user", user._id);
     }
-  }, [user]);
+  }, [user, location]);
+
+  useEffect(() => {
+    socket.on("online_users", (users) => setOnlineUsers(users));
+  }, [socket]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (user) {
+        if (nextAppState === "active") {
+          socket.emit("add_user", user._id);
+        } else {
+          socket.disconnect();
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const handleChats = (data) => {
     const updatedChats = chats.map((chat) => {
@@ -74,6 +94,7 @@ export default function AppContextProvider({ children }) {
         chats,
         setChats,
         handleChats,
+        onlineUsers,
       }}
     >
       {Platform.OS === "android" ? (

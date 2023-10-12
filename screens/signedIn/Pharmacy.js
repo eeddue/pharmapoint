@@ -57,7 +57,10 @@ const Pharmacy = ({ route, navigation }) => {
 
   const goToChat = () => {
     user
-      ? navigation.navigate("Chat", { receiver: pharmacy.owner })
+      ? navigation.navigate("Chat", {
+          receiver: pharmacy.owner,
+          members: [pharmacy.owner._id, user?._id],
+        })
       : navigation.navigate("Login");
   };
 

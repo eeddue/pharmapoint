@@ -28,7 +28,7 @@ const Inbox = ({ navigation }) => {
     });
 
     return unsub;
-  }, [navigation]);
+  }, [navigation, user]);
 
   const getChats = async () => {
     if (!user) return;
