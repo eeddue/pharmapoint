@@ -8,7 +8,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useCallback } from "react";
 import axios from "axios";
 import { StatusBar } from "expo-status-bar";
-import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import Toast from "react-native-toast-message";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,31 +24,13 @@ export default function App() {
 
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
-      // await SplashScreen.hideAsync();
+      await SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
   if (!fontsLoaded) {
     return null;
   }
-
-  const toastConfig = {
-    success: (props) => (
-      <BaseToast
-        {...props}
-        text1Style={{ fontFamily: "SemiBold" }}
-        text2Style={{ fontFamily: "Regular" }}
-      />
-    ),
-
-    error: (props) => (
-      <ErrorToast
-        {...props}
-        text1Style={{ fontFamily: "SemiBold" }}
-        text2Style={{ fontFamily: "Regular" }}
-      />
-    ),
-  };
 
   return (
     <View
@@ -58,7 +40,7 @@ export default function App() {
       <AppContextProvider>
         <NavigationContainer>
           <AppNavigation />
-          <Toast config={toastConfig} />
+          <Toast />
           <StatusBar style="dark" />
         </NavigationContainer>
       </AppContextProvider>

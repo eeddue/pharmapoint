@@ -25,26 +25,37 @@ import socket from "../../context/socket";
 import ActionsModal from "../../components/ActionsModal";
 import { AvatarIcon } from "../../constants/icons";
 import { formatMessages, showToast } from "../../helpers";
+import { getChatMessages } from "../../api";
 
 const Chat = ({ route }) => {
   const { receiver, members } = route.params;
   const { user, onlineUsers } = useAppContext();
   const navigation = useNavigation();
 
-  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
   const [visible, setVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [typing, setTyping] = useState(false);
 
+  const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
+  const skip = chatMessages.length;
   const headers = { Authorization: `Bearer ${user.token}` };
 
   useEffect(() => {
     (async () => {
-      await axios
-        .get(`/chats/${receiver._id}/messages`, { headers })
-        .then(({ data }) => setMessages(formatMessages(data.messages)))
-        .catch((error) => {})
-        .finally(() => setLoading(false));
+      const { messages, pages } = await getChatMessages(
+        receiver._id,
+        skip,
+        headers
+      );
+      setChatMessages(formatMessages(messages));
+      setTotalPages(pages);
+      setLoading(false);
     })();
   }, []);
 
@@ -59,13 +70,27 @@ const Chat = ({ route }) => {
           _id: msg.sender,
         },
       };
-      setMessages((previousMessages) =>
+      setChatMessages((previousMessages) =>
         GiftedChat.append(previousMessages, newMessage)
       );
     });
 
+    socket.on("receiver_typing", (senderId) => {
+      if (senderId === receiver._id) {
+        setTyping(true);
+      }
+    });
+
+    socket.on("receiver_done_typing", (senderId) => {
+      if (senderId === receiver._id) {
+        setTyping(false);
+      }
+    });
+
     return () => {
       socket.off("receive_message");
+      socket.off("receiver_typing");
+      socket.off("receiver_done_typing");
     };
   }, [socket]);
 
@@ -78,7 +103,11 @@ const Chat = ({ route }) => {
       )
       .then(({ data }) => {
         socket.emit("send_message", data.message);
-        setMessages((previousMessages) =>
+        socket.emit("sender_done_typing", {
+          sender: user?._id,
+          receiver: receiver._id,
+        });
+        setChatMessages((previousMessages) =>
           GiftedChat.append(previousMessages, messages)
         );
       })
@@ -97,7 +126,20 @@ const Chat = ({ route }) => {
       .finally(() => setDeleting(false));
   };
 
-  const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
+  const loadMoreMessages = async () => {
+    if (totalPages === currentPage) return;
+    setFetching(true);
+    setCurrentPage((prev) => prev + 1);
+    const { messages, pages } = await getChatMessages(
+      receiver._id,
+      skip,
+      headers
+    );
+    const msgs = formatMessages(messages);
+    setChatMessages((prev) => prev.concat(msgs));
+    setTotalPages(pages);
+    setFetching(false);
+  };
 
   const renderHeader = () => {
     return (
@@ -119,10 +161,10 @@ const Chat = ({ route }) => {
             ]}
             numberOfLines={1}
           >
-            {isOnline ? "Online" : "Offline"}
+            {typing ? "Typing..." : isOnline ? "Online" : "Offline"}
           </Text>
         </View>
-        {messages.length ? (
+        {chatMessages.length ? (
           <TouchableOpacity
             disabled={deleting}
             onPress={() => setVisible((prev) => !prev)}
@@ -143,7 +185,20 @@ const Chat = ({ route }) => {
           style={styles.input}
           placeholder="Type a message..."
           value={props.text}
-          onChangeText={props.onTextChanged}
+          onChangeText={(value) => {
+            props.onTextChanged(value);
+            if (value.trim().length) {
+              socket.emit("sender_typing", {
+                sender: user?._id,
+                receiver: receiver._id,
+              });
+            } else {
+              socket.emit("sender_done_typing", {
+                sender: user?._id,
+                receiver: receiver._id,
+              });
+            }
+          }}
           editable={!deleting}
           autoFocus
         />
@@ -189,7 +244,7 @@ const Chat = ({ route }) => {
         />
       ) : (
         <GiftedChat
-          messages={messages}
+          messages={chatMessages}
           onSend={(messages) => onSend(messages)}
           user={{ _id: user._id }}
           textInputStyle={styles.input}
@@ -200,9 +255,17 @@ const Chat = ({ route }) => {
           renderMessageText={renderMessageText}
           showUserAvatar={false}
           renderAvatar={null}
+          scrollToBottom={true}
+          scrollToBottomComponent={() => (
+            <Icons.AntDesign name="arrowdown" size={20} />
+          )}
           alwaysShowSend
+          infiniteScroll={true}
+          loadEarlier={currentPage < totalPages}
+          onLoadEarlier={loadMoreMessages}
+          isLoadingEarlier={fetching}
           messagesContainerStyle={
-            !messages.length && {
+            !chatMessages.length && {
               transform: [{ scaleY: -1 }],
             }
           }

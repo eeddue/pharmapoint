@@ -5,12 +5,40 @@ import { COLORS, FONTS } from "../constants";
 import { useAppContext } from "../context/AppContext";
 import { AvatarIcon } from "../constants/icons";
 import { getFormattedDate } from "../helpers";
+import { useEffect, useState } from "react";
+import socket from "../context/socket";
 
 const ChatItem = ({ chat }) => {
   const navigation = useNavigation();
   const { user } = useAppContext();
+  const [typing, setTyping] = useState(false);
   const receiver = chat?.users.find((us) => us._id !== user._id);
   const members = chat.users.map((member) => member._id);
+  const [lastMessage, setLastMessage] = useState(chat.lastMessage);
+
+  useEffect(() => {
+    socket.on("receive_message", (msg) => {
+      if (members.includes(msg.sender)) {
+        setLastMessage(msg);
+      }
+    });
+    socket.on("receiver_typing", (senderId) => {
+      if (members.includes(senderId)) {
+        setTyping(true);
+      }
+    });
+
+    socket.on("receiver_done_typing", (senderId) => {
+      if (members.includes(senderId)) {
+        setTyping(false);
+      }
+    });
+
+    return () => {
+      socket.off("receiver_typing");
+      socket.off("receiver_done_typing");
+    };
+  }, [socket]);
 
   return (
     <TouchableOpacity
@@ -26,10 +54,18 @@ const ChatItem = ({ chat }) => {
           <Text style={styles.name} numberOfLines={1}>
             {receiver.username}
           </Text>
-          <Text style={styles.time}>{getFormattedDate(chat.updatedAt)}</Text>
+          <Text style={styles.time}>
+            {getFormattedDate(lastMessage.createdAt)}
+          </Text>
         </View>
-        <Text style={styles.message} numberOfLines={1}>
-          {chat.lastMessage?.message}
+        <Text
+          style={[
+            styles.message,
+            { color: typing ? COLORS.green : COLORS.ltblack },
+          ]}
+          numberOfLines={1}
+        >
+          {typing ? "Typing..." : lastMessage?.message}
         </Text>
       </View>
     </TouchableOpacity>
@@ -68,7 +104,6 @@ const styles = StyleSheet.create({
   message: {
     marginRight: 10,
     ...FONTS.Regular,
-    color: COLORS.ltblack,
   },
   time: {
     marginLeft: "auto",

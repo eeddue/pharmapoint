@@ -46,3 +46,17 @@ export const searchProducts = async (name) => {
     return { products: [], pages: 1 };
   }
 };
+
+export const getChatMessages = async (receiverId, skip, headers) => {
+  try {
+    const { data } = await axios.get(
+      `/chats/${receiverId}/messages?skip=${skip}`,
+      {
+        headers,
+      }
+    );
+    return { messages: data.messages, pages: data.pages };
+  } catch (error) {
+    return { messages: [], pages: 1 };
+  }
+};
