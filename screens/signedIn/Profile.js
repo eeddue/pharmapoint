@@ -60,45 +60,43 @@ const Profile = () => {
   if (!user) return <AccessDenied />;
 
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.white }}>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: COLORS.white }}
-        bounces={false}
+    <ScrollView
+      style={{ flex: 1, backgroundColor: COLORS.white }}
+      bounces={false}
+    >
+      <View style={styles.avatarView}>
+        <Image style={styles.avatar} source={AvatarIcon} />
+      </View>
+      <View style={styles.view}>
+        <Text style={styles.label}>Username</Text>
+        <Text style={styles.value}>{user.username}</Text>
+      </View>
+      <View style={styles.view}>
+        <Text style={styles.label}>Email address</Text>
+        <Text style={styles.value}>{user.email}</Text>
+      </View>
+      <View style={styles.view}>
+        <Text style={styles.label}>Joined on</Text>
+        <Text style={styles.value}>
+          {new Date(user.createdAt).toDateString()}
+        </Text>
+      </View>
+
+      {renderMore(user.role)}
+
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={handleLogout}
+        style={[
+          styles.view,
+          { flexDirection: "row", alignItems: "center", gap: 10 },
+        ]}
       >
-        <View style={styles.avatarView}>
-          <Image style={styles.avatar} source={AvatarIcon} />
-        </View>
-        <View style={styles.view}>
-          <Text style={styles.label}>Username</Text>
-          <Text style={styles.value}>{user.username}</Text>
-        </View>
-        <View style={styles.view}>
-          <Text style={styles.label}>Email address</Text>
-          <Text style={styles.value}>{user.email}</Text>
-        </View>
-        <View style={styles.view}>
-          <Text style={styles.label}>Joined on</Text>
-          <Text style={styles.value}>
-            {new Date(user.createdAt).toDateString()}
-          </Text>
-        </View>
+        <Icons.Feather name="power" size={20} color={COLORS.red} />
 
-        {renderMore(user.role)}
-
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={handleLogout}
-          style={[
-            styles.view,
-            { flexDirection: "row", alignItems: "center", gap: 10 },
-          ]}
-        >
-          <Icons.Feather name="power" size={20} color={COLORS.red} />
-
-          <Text style={[styles.value, { color: COLORS.red }]}>Log out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
+        <Text style={[styles.value, { color: COLORS.red }]}>Log out</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
