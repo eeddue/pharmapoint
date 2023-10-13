@@ -17,8 +17,9 @@ import AccessDenied from "../../components/AccessDenied";
 const Inbox = ({ navigation }) => {
   const [fetching, setFetching] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [chats, setChats] = useState([]);
 
-  const { user, chats, setChats } = useAppContext();
+  const { user } = useAppContext();
 
   useEffect(() => {
     const unsub = navigation.addListener("focus", async () => {

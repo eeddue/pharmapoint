@@ -1,6 +1,5 @@
 import {
   ActivityIndicator,
-  Alert,
   Image,
   StyleSheet,
   Text,
@@ -47,6 +46,7 @@ const LocationRequest = () => {
           activeOpacity={0.5}
           style={styles.button}
           onPress={handleLocation}
+          disabled={loading}
         >
           {loading ? (
             <ActivityIndicator size="small" color={COLORS.white} />

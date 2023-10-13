@@ -3,9 +3,8 @@ import { Platform, SafeAreaView, StatusBar, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import socket from "./socket";
-import { getCurrentLocation, getStoredProducts } from "../helpers";
+import { getStoredProducts } from "../helpers";
 import { AppState } from "react-native";
-// import LocationRequest from "../components/LocationRequest";
 
 const AppContext = createContext({});
 
@@ -16,7 +15,6 @@ export default function AppContextProvider({ children }) {
   const [launched, setLaunched] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState(null);
-  const [chats, setChats] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
@@ -43,6 +41,7 @@ export default function AppContextProvider({ children }) {
 
   useEffect(() => {
     if (user && location) {
+      socket.connect();
       socket.emit("add_user", user._id);
     }
   }, [user, location]);
@@ -55,6 +54,7 @@ export default function AppContextProvider({ children }) {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (user) {
         if (nextAppState === "active") {
+          socket.connect();
           socket.emit("add_user", user._id);
         } else {
           socket.disconnect();
@@ -65,20 +65,7 @@ export default function AppContextProvider({ children }) {
     return () => {
       subscription.remove();
     };
-  }, []);
-
-  const handleChats = (data) => {
-    const updatedChats = chats.map((chat) => {
-      if (chat.users.find((us) => us._id === data.receiver._id)) {
-        return {
-          ...chat,
-          messages: [chat.messages, data.message],
-        };
-      }
-      return chat;
-    });
-    setChats(updatedChats);
-  };
+  }, [user]);
 
   return (
     <AppContext.Provider
@@ -91,9 +78,6 @@ export default function AppContextProvider({ children }) {
         launched,
         location,
         setLocation,
-        chats,
-        setChats,
-        handleChats,
         onlineUsers,
       }}
     >

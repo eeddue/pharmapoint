@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -7,18 +8,46 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import * as Icons from "@expo/vector-icons";
+import axios from "axios";
 import { COLORS, FONTS } from "../../../constants";
 import KeyboardWrapper from "../../../components/KeyboardWrapper";
+import { showToast } from "../../../helpers";
+import { useAppContext } from "../../../context/AppContext";
 
 const Contact = ({ navigation }) => {
-  const handleSubmit = async () => {};
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { user } = useAppContext();
+
+  const handleSubmit = async () => {
+    if (!message || !subject)
+      return showToast(
+        "error",
+        "Missing fields.",
+        "Subject and message required."
+      );
+
+    setLoading(true);
+    const headers = { Authorization: `Bearer ${user?.token}` };
+    await axios
+      .post("/contact", { subject, message, email: user?.email }, { headers })
+      .then(({ data }) => {
+        showToast("success", "Sent", data.msg);
+        navigation.goBack();
+      })
+      .catch((error) => showToast("error", "Sorry", error.response.data.msg))
+      .finally(() => setLoading(false));
+  };
+
   return (
     <KeyboardWrapper>
       {/* header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable disabled={loading} onPress={() => navigation.goBack()}>
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
         <Text style={styles.headerText}>Contact us</Text>
@@ -38,6 +67,9 @@ const Contact = ({ navigation }) => {
             placeholderTextColor={COLORS.ltblack}
             style={styles.input}
             autoFocus
+            value={subject}
+            onChangeText={setSubject}
+            editable={!loading}
           />
         </View>
 
@@ -50,14 +82,22 @@ const Contact = ({ navigation }) => {
             numberOfLines={10}
             textAlignVertical="top"
             multiline
+            value={message}
+            onChangeText={setMessage}
+            editable={!loading}
           />
         </View>
         <TouchableOpacity
           activeOpacity={0.5}
           style={styles.button}
           onPress={handleSubmit}
+          disabled={loading}
         >
-          <Text style={styles.buttonText}>Submit</Text>
+          {loading ? (
+            <ActivityIndicator size={20} color={COLORS.white} />
+          ) : (
+            <Text style={styles.buttonText}>Submit</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardWrapper>

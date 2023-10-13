@@ -52,7 +52,7 @@ export const updateProduct = async (type, productId) => {
 export const getCurrentLocation = async () => {
   let { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== "granted") {
-    Alert.alert("Permission to access location was denied");
+    Alert.alert("Permission to access location was denied.");
     return null;
   }
 
@@ -83,7 +83,7 @@ function toRadians(degrees) {
 }
 
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const earthRadius = 6371; // Earth's radius in kilometers
+  const earthRadius = 6371;
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
 
@@ -96,7 +96,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  const distance = earthRadius * c; // Distance in kilometers (or miles)
+  const distance = earthRadius * c;
 
   return commaNumber(distance.toFixed(1));
 };

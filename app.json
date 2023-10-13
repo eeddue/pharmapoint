@@ -42,7 +42,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow PharmaPoint to accesses your files"
+          "photosPermission": "Allow PharmaPoint to access your files."
         }
       ]
     ],

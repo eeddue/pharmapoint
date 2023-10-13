@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import AccessDenied from "../../components/AccessDenied";
 import { useNavigation } from "@react-navigation/native";
 import { showToast } from "../../helpers";
+import socket from "../../context/socket";
 
 const renderMore = (role) => {
   const navigation = useNavigation();
@@ -43,7 +44,10 @@ const Profile = () => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("user")
-      .then(() => setUser(null))
+      .then(() => {
+        setUser(null);
+        socket.disconnect();
+      })
       .catch(() =>
         showToast(
           "error",
