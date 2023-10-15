@@ -32,7 +32,6 @@ const Chat = ({ route }) => {
   const { user, onlineUsers } = useAppContext();
   const navigation = useNavigation();
 
-  const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [visible, setVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);

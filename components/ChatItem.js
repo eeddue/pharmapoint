@@ -35,6 +35,7 @@ const ChatItem = ({ chat }) => {
     });
 
     return () => {
+      socket.off("receive_message");
       socket.off("receiver_typing");
       socket.off("receiver_done_typing");
     };
