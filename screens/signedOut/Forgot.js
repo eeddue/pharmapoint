@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import axios from "axios";
+import validator from "validator";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
@@ -23,6 +24,13 @@ const Forgot = ({ navigation }) => {
   const handlePress = async () => {
     if (!email)
       return showToast("error", "Field required", "Email is required.");
+
+    if (!validator.isEmail(email))
+      return showToast(
+        "error",
+        "Invalid email.",
+        "Provide a valid email address."
+      );
 
     setLoading(true);
     try {

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import * as Icons from "@expo/vector-icons";
 
 import { COLORS, FONTS } from "../constants";
 import { useAppContext } from "../context/AppContext";
@@ -10,11 +11,13 @@ import socket from "../context/socket";
 
 const ChatItem = ({ chat }) => {
   const navigation = useNavigation();
-  const { user } = useAppContext();
+  const { user, onlineUsers } = useAppContext();
   const [typing, setTyping] = useState(false);
   const receiver = chat?.users.find((us) => us._id !== user._id);
   const members = chat.users.map((member) => member._id);
   const [lastMessage, setLastMessage] = useState(chat.lastMessage);
+
+  const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
 
   useEffect(() => {
     socket.on("receive_message", (msg) => {
@@ -52,9 +55,16 @@ const ChatItem = ({ chat }) => {
       </View>
       <View style={{ flex: 1 }}>
         <View style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
-          <Text style={styles.name} numberOfLines={1}>
-            {receiver.username}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Icons.Octicons
+              name="dot-fill"
+              color={isOnline ? COLORS.green : COLORS.red}
+              size={15}
+            />
+            <Text style={styles.name} numberOfLines={1}>
+              {receiver.username}
+            </Text>
+          </View>
           <Text style={styles.time}>
             {getFormattedDate(lastMessage.createdAt)}
           </Text>

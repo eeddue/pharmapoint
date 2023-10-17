@@ -15,6 +15,7 @@ import PharmacyItem from "../../components/PharmacyItem";
 import LoadingMore from "../../components/LoadingMore";
 import ListEmptyComponent from "../../components/ListEmptyComponent";
 import { getPharmacies, searchPharmacies } from "../../api";
+import { useAppContext } from "../../context/AppContext";
 
 const Pharmacies = ({ navigation }) => {
   const [pharmacies, setPharmacies] = useState([]);
@@ -28,9 +29,11 @@ const Pharmacies = ({ navigation }) => {
   const [fetching, setFetching] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  const { user } = useAppContext();
+
   useEffect(() => {
     (async () => {
-      const { pharmacies, pages } = await getPharmacies(skip);
+      const { pharmacies, pages } = await getPharmacies(skip, user);
       setPharmacies(pharmacies);
       setPages(pages);
       setLoading(false);
@@ -39,7 +42,7 @@ const Pharmacies = ({ navigation }) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    const { pharmacies, pages } = await getPharmacies(skip);
+    const { pharmacies, pages } = await getPharmacies(skip, user);
     setPharmacies(pharmacies);
     setPages(pages);
     setRefreshing(false);
@@ -47,7 +50,7 @@ const Pharmacies = ({ navigation }) => {
 
   const searchProducts = async () => {
     setSearching(true);
-    const { pharmacies, pages } = await searchPharmacies(name);
+    const { pharmacies, pages } = await searchPharmacies(name, user);
     setPages(pages);
     setPharmacies(pharmacies);
     setSearching(false);
@@ -58,7 +61,7 @@ const Pharmacies = ({ navigation }) => {
     setSkip(currentPage * 20);
     setCurrentPage((prev) => prev + 1);
     setFetching(true);
-    const { pharmacies: more } = await getPharmacies(skip);
+    const { pharmacies: more } = await getPharmacies(skip, user);
     setPharmacies(pharmacies.concat(more));
     setFetching(false);
   };

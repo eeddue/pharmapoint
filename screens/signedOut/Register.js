@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import React, { useState } from "react";
+import validator from "validator";
 import { COLORS, FONTS } from "../../constants";
 import KeyboardWrapper from "../../components/KeyboardWrapper";
 import axios from "axios";
@@ -26,6 +27,13 @@ const Register = ({ navigation }) => {
   const handlePress = async () => {
     if (!email || !password || !username || !cPass)
       return showToast("error", "Fields required", "All fields are required.");
+
+    if (!validator.isEmail(email))
+      return showToast(
+        "error",
+        "Invalid email.",
+        "Provide a valid email address."
+      );
 
     if (password !== cPass)
       return showToast("error", "Warning", "Passwords must be the same.");
@@ -116,6 +124,7 @@ const Register = ({ navigation }) => {
             style={styles.input}
             value={username}
             onChangeText={(val) => setUsername(val.toLowerCase().trim())}
+            maxLength={15}
           />
         </View>
 

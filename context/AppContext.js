@@ -42,12 +42,16 @@ export default function AppContextProvider({ children }) {
   useEffect(() => {
     if (user && location) {
       socket.connect();
-      socket.emit("add_user", user._id);
+      socket.emit("add_user", { userId: user._id, username: user.username });
     }
   }, [user, location]);
 
   useEffect(() => {
     socket.on("online_users", (users) => setOnlineUsers(users));
+
+    return () => {
+      socket.off("online_users");
+    };
   }, [socket]);
 
   useEffect(() => {
@@ -55,7 +59,10 @@ export default function AppContextProvider({ children }) {
       if (user) {
         if (nextAppState === "active") {
           socket.connect();
-          socket.emit("add_user", user._id);
+          socket.emit("add_user", {
+            userId: user._id,
+            username: user.username,
+          });
         } else {
           socket.disconnect();
         }

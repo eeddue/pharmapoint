@@ -90,6 +90,12 @@ const Pharmacy = ({ route, navigation }) => {
 
   const handlePress = () => {
     if (!user) return navigation.navigate("Login");
+    if (user.role === "pharmacy" && !isMine)
+      return showToast(
+        "error",
+        "Sorry",
+        "As a pharmacist, you can't review another pharmacy."
+      );
     if (isMine) return navigation.navigate("PharmacyDetails", { pharmacy });
     return setVisible((prev) => !prev);
   };

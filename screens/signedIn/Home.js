@@ -18,6 +18,7 @@ import { getGreeting } from "../../helpers";
 import PharmacyItem from "../../components/PharmacyItem";
 import ProductItem from "../../components/ProductItem";
 import { getHomeItems } from "../../api";
+import { useAppContext } from "../../context/AppContext";
 
 const Home = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -26,20 +27,20 @@ const Home = ({ navigation }) => {
   const [products, setProducts] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
 
+  const { user } = useAppContext();
+
   useEffect(() => {
-    const unsub = navigation.addListener("focus", async () => {
-      const { pharmacies, products } = await getHomeItems();
+    (async () => {
+      const { pharmacies, products } = await getHomeItems(user?._id);
       setPharmacies(pharmacies);
       setProducts(products);
       setLoading(false);
-    });
-
-    return unsub;
-  }, []);
+    })();
+  }, [user]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    const { pharmacies, products } = await getHomeItems();
+    const { pharmacies, products } = await getHomeItems(user?._id);
     setPharmacies(pharmacies);
     setProducts(products);
     setRefreshing(false);

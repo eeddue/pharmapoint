@@ -126,28 +126,32 @@ const CreatePharmacy = ({ route }) => {
           />
         </View>
 
-        <View style={{ marginTop: 15 }}>
-          <Text style={styles.label}>National ID</Text>
-          <TextInput
-            editable={!loading}
-            placeholder="6574848"
-            style={styles.input}
-            value={id}
-            keyboardType="number-pad"
-            onChangeText={(value) => setId(value.trim())}
-          />
-        </View>
+        {pharmacy ? null : (
+          <>
+            <View style={{ marginTop: 15 }}>
+              <Text style={styles.label}>National ID</Text>
+              <TextInput
+                editable={!loading}
+                placeholder="6574848"
+                style={styles.input}
+                value={id}
+                keyboardType="number-pad"
+                onChangeText={(value) => setId(value.trim())}
+              />
+            </View>
 
-        <View style={{ marginTop: 15 }}>
-          <Text style={styles.label}>Operating license</Text>
-          <TextInput
-            editable={!loading}
-            placeholder="JVHI8VNG8F"
-            style={styles.input}
-            value={license}
-            onChangeText={setLicense}
-          />
-        </View>
+            <View style={{ marginTop: 15 }}>
+              <Text style={styles.label}>Operating license</Text>
+              <TextInput
+                editable={!loading}
+                placeholder="JVHI8VNG8F"
+                style={styles.input}
+                value={license}
+                onChangeText={setLicense}
+              />
+            </View>
+          </>
+        )}
 
         <View style={{ marginTop: 15, flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}>

@@ -1,73 +1,69 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import ReviewItem from "../../components/ReviewItem";
-import { COLORS, FONTS } from "../../constants";
-import axios from "axios";
+import { COLORS } from "../../constants";
 import { useNavigation } from "@react-navigation/native";
+import ListEmptyComponent from "../../components/ListEmptyComponent";
+import LoadingMore from "../../components/LoadingMore";
+import { getPharmacyReviews } from "../../api";
 
 const Reviews = ({ route }) => {
-  const navigation = useNavigation();
   const { pharmacy } = route.params;
+  const navigation = useNavigation();
 
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+  const [fetching, setFetching] = useState(false);
+  const [pages, setPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [skip, setSkip] = useState(0);
 
   useEffect(() => {
     const unsub = navigation.addListener("focus", async () => {
-      await axios
-        .get(`/reviews/${pharmacy._id}`)
-        .then(({ data }) => setReviews(data.reviews))
-        .catch((error) => {})
-        .finally(() => setLoading(false));
+      const { reviews, pages } = await getPharmacyReviews(pharmacy._id, skip);
+      setCurrentPage((prev) => prev + 1);
+      setPages(pages);
+      setReviews(reviews);
+      setLoading(false);
     });
 
-    return () => unsub;
-  }, []);
+    return unsub;
+  }, [navigation]);
+
+  const loadMore = async () => {
+    if (currentPage === pages || pages === 0) return;
+    setSkip(currentPage * 20);
+    setCurrentPage((prev) => prev + 1);
+    setFetching(true);
+    const { reviews: more } = await getPharmacyReviews(pharmacy._id, skip);
+    setReviews(reviews.concat(more));
+    setFetching(false);
+  };
 
   return (
     <View style={{ backgroundColor: COLORS.white, flex: 1 }}>
-      {loading ? (
-        <View style={{ flex: 1 }}>
-          <ActivityIndicator
-            color={COLORS.red}
-            size={25}
-            style={{ marginTop: 30 }}
+      <FlatList
+        bounces={false}
+        data={reviews}
+        ListEmptyComponent={
+          <ListEmptyComponent
+            loading={loading}
+            text="No one has reviewed this pharmacy."
           />
-        </View>
-      ) : (
-        <FlatList
-          bounces={false}
-          data={reviews}
-          ListEmptyComponent={() => (
-            <Text style={styles.empty}>No one has reviewed this pharmacy.</Text>
-          )}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item, index }) => (
-            <ReviewItem index={index} review={item} />
-          )}
-          contentContainerStyle={{
-            backgroundColor: COLORS.white,
-            padding: 10,
-          }}
-        />
-      )}
+        }
+        ListFooterComponent={loading || fetching ? LoadingMore : null}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item, index }) => (
+          <ReviewItem index={index} review={item} />
+        )}
+        onEndReached={loadMore}
+        contentContainerStyle={{
+          backgroundColor: COLORS.white,
+          padding: 10,
+        }}
+      />
     </View>
   );
 };
 
 export default Reviews;
-
-const styles = StyleSheet.create({
-  empty: {
-    ...FONTS.Regular,
-    textAlign: "center",
-    color: COLORS.ltblack,
-    marginTop: 30,
-  },
-});

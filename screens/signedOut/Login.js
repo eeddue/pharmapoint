@@ -16,6 +16,7 @@ import KeyboardWrapper from "../../components/KeyboardWrapper";
 import { AppIcon } from "../../constants/icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import validator from "validator";
 import { useAppContext } from "../../context/AppContext";
 import { showToast } from "../../helpers";
 
@@ -26,7 +27,15 @@ const Login = ({ navigation }) => {
   const { setUser } = useAppContext();
 
   const handlePress = async () => {
-    if (!email || !password) return alert("All fields are required.");
+    if (!email || !password)
+      return showToast("error", "Fields missing.", "All fields are required.");
+
+    if (!validator.isEmail(email))
+      return showToast(
+        "error",
+        "Invalid email.",
+        "Provide a valid email address."
+      );
 
     setLoading(true);
     await axios
