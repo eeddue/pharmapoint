@@ -16,6 +16,7 @@ export default function AppContextProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [user, setUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [chats, setChats] = useState([]);
 
   useEffect(() => {
     (async () => {
@@ -49,10 +50,56 @@ export default function AppContextProvider({ children }) {
   useEffect(() => {
     socket.on("online_users", (users) => setOnlineUsers(users));
 
+    socket.on("receive_message", ({ msg, users }) => {
+      const isChat = chats.find((chat) =>
+        chat.users.some((us) => us._id === msg.sender)
+      );
+      if (isChat) {
+        setChats((prev) =>
+          prev
+            .map((chat) => {
+              if (chat.users.some((us) => us._id === msg.sender))
+                return { ...chat, lastMessage: msg };
+              return chat;
+            })
+            .sort(
+              (a, b) =>
+                new Date(b.lastMessage.createdAt) -
+                new Date(a.lastMessage.createdAt)
+            )
+        );
+      } else {
+        const newChat = {
+          _id: Date.now(),
+          users: users.map((user) => ({
+            _id: user.userId,
+            username: user.username,
+          })),
+          lastMessage: msg,
+        };
+        setChats((prev) => [newChat, ...prev]);
+      }
+    });
+
+    socket.on("chat_deleted", (senderId) => {
+      const filteredChats = chats.filter((chat) => {
+        if (!chat.users.some((us) => us._id === senderId)) return chat;
+      });
+      setChats(
+        filteredChats.sort(
+          (a, b) =>
+            new Date(b.lastMessage.createdAt) -
+            new Date(a.lastMessage.createdAt)
+        )
+      );
+    });
+
     return () => {
       socket.off("online_users");
+      socket.off("receive_message");
+      socket.off("chat_deleted");
     };
-  }, [socket]);
+  }, [socket, chats]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextAppState) => {
@@ -86,6 +133,8 @@ export default function AppContextProvider({ children }) {
         location,
         setLocation,
         onlineUsers,
+        chats,
+        setChats,
       }}
     >
       {Platform.OS === "android" ? (

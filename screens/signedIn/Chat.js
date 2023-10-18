@@ -86,10 +86,22 @@ const Chat = ({ route }) => {
       }
     });
 
+    socket.on("chat_deleted", (senderId) => {
+      if (receiver._id === senderId) {
+        setChatMessages([]);
+        showToast(
+          "info",
+          "Messages deleted.",
+          `${receiver.username} has deleted this conversation.`
+        );
+      }
+    });
+
     return () => {
       socket.off("receive_message");
       socket.off("receiver_typing");
       socket.off("receiver_done_typing");
+      socket.off("chat_deleted");
     };
   }, [socket]);
 
@@ -118,6 +130,10 @@ const Chat = ({ route }) => {
     await axios
       .delete(`/chats/${receiver._id}`, { headers })
       .then(() => {
+        socket.emit("chat_deleted", {
+          senderId: user._id,
+          receiverId: receiver._id,
+        });
         setVisible((prev) => !prev);
         navigation.goBack();
       })

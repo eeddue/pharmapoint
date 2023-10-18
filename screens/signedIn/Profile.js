@@ -23,7 +23,7 @@ const renderMore = (role) => {
   return (
     <View>
       {more.map((item, index) =>
-        index === 0 && role !== "pharmacy" ? null : (
+        index === 0 || (index === 1 && role !== "pharmacy") ? null : (
           <TouchableOpacity
             onPress={() => navigation.navigate(item.link)}
             activeOpacity={0.5}

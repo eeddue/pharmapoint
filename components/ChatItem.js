@@ -15,16 +15,10 @@ const ChatItem = ({ chat }) => {
   const [typing, setTyping] = useState(false);
   const receiver = chat?.users.find((us) => us._id !== user._id);
   const members = chat.users.map((member) => member._id);
-  const [lastMessage, setLastMessage] = useState(chat.lastMessage);
 
   const isOnline = onlineUsers.some((user) => user.userId === receiver._id);
 
   useEffect(() => {
-    socket.on("receive_message", (msg) => {
-      if (members.includes(msg.sender)) {
-        setLastMessage(msg);
-      }
-    });
     socket.on("receiver_typing", (senderId) => {
       if (members.includes(senderId)) {
         setTyping(true);
@@ -38,7 +32,6 @@ const ChatItem = ({ chat }) => {
     });
 
     return () => {
-      socket.off("receive_message");
       socket.off("receiver_typing");
       socket.off("receiver_done_typing");
     };
@@ -66,7 +59,7 @@ const ChatItem = ({ chat }) => {
             </Text>
           </View>
           <Text style={styles.time}>
-            {getFormattedDate(lastMessage.createdAt)}
+            {getFormattedDate(chat.lastMessage.createdAt)}
           </Text>
         </View>
         <Text
@@ -76,7 +69,7 @@ const ChatItem = ({ chat }) => {
           ]}
           numberOfLines={1}
         >
-          {typing ? "Typing..." : lastMessage?.message}
+          {typing ? "Typing..." : chat.lastMessage?.message}
         </Text>
       </View>
     </TouchableOpacity>

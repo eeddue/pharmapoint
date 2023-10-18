@@ -64,7 +64,9 @@ const Product = ({ route, navigation }) => {
           <Icons.Ionicons name="arrow-back" size={25} />
         </Pressable>
 
-        <Text style={styles.headerText}>{product.name}</Text>
+        <Text style={styles.headerText} numberOfLines={1}>
+          {product.name}
+        </Text>
 
         <Pressable
           disabled={loading}
@@ -137,6 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomColor: COLORS.gray,
     borderBottomWidth: 1,
+    gap: 20,
   },
   headerText: { ...FONTS.SemiBold, fontSize: 15 },
   imageView: { height: 300, backgroundColor: COLORS.gray },

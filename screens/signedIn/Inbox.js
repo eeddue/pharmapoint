@@ -17,19 +17,16 @@ import AccessDenied from "../../components/AccessDenied";
 const Inbox = ({ navigation }) => {
   const [fetching, setFetching] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [chats, setChats] = useState([]);
 
-  const { user } = useAppContext();
+  const { user, chats, setChats } = useAppContext();
 
   useEffect(() => {
-    const unsub = navigation.addListener("focus", async () => {
+    (async () => {
       const response = await getChats();
       setChats(response);
       setFetching(false);
-    });
-
-    return unsub;
-  }, [navigation, user]);
+    })();
+  }, [user]);
 
   const getChats = async () => {
     if (!user) return;
